@@ -19,6 +19,22 @@
   },
   "homepage": "https://github.com/thoughtbot/fishery#readme",
   "devDependencies": {
+    "prettier": "^1.15.3",
     "typescript": "^3.2.2"
+  },
+  "prettier": {
+    "useTabs": false,
+    "singleQuote": true,
+    "trailingComma": "all",
+    "bracketSpacing": true,
+    "semi": true,
+    "overrides": [
+      {
+        "files": "**/package.json",
+        "options": {
+          "parser": "json-stringify"
+        }
+      }
+    ]
   }
 }
