@@ -1,34 +1,82 @@
 # Fishery
 
-Fishery is a library for setting up JavaScript objects for use in tests. It is modeled after the Ruby gem, [Factory Bot][factory_bot].
+Fishery is a library for setting up JavaScript objects for use in tests, Storybook, and anywhere else you need to set up data. It is modeled after the Ruby gem, [factory_bot][factory_bot].
 
-Fishery is built with TypeScript in mind, so your factories will always return typed objects. If you aren't using TypeScript, that's fine too -- Fishery will still work, just without the extra typechecking that comes with TypeScript.
+Fishery is built with TypeScript in mind. Factories return typed objects, so you can be confident that the data used in your tests is valid. If you aren't using TypeScript, that's fine too – Fishery still works, just without the extra typechecking that comes with TypeScript.
 
-### Getting Started
+## Getting Started
 
-```
-npm install --save fishery
-```
-
-or
+Coming soon to NPM. In the meantime:
 
 ```
-yarn add fishery
+npm install --save git+ssh://git@github.com/thoughtbot/fishery
 ```
 
-### Usage
+or, if using Yarn:
+
+```
+yarn add git+ssh://git@github.com/thoughtbot/fishery
+```
+
+## Usage
+
+It is generally recommended to define one factory per file and then combine them together to form a `factories` object which can then be used in tests, Storybook, etc.:
+
+```typescript
+// factories/user.ts
+import { Factory } from 'fishery';
+import { User } from '../types';
+
+export default Factory.define<User>(({ sequence }) => ({
+  id: `user-${sequence}`,
+  name: 'Bob',
+}));
+```
+
+```typescript
+// factories/index.ts
+import user from './user';
+
+export const factories = {
+  user,
+};
+```
+
+```typescript
+// my-test.test.ts
+import { factories } from './factories';
+
+const user = factories.user.build({ name: 'Susan' });
+```
+
+## Documentation
+
+### Typechecking
+
+Factories are typed, so using the factory from the above example, these would both cause TypeScript compile errors:
+
+```typescript
+const user = factories.user.build();
+user.email; // type error! Property 'email' does not exist on type 'User'
+```
+
+```typescript
+const user = factories.user.build({ age: 18 }); // type error! Argument of type '{ age: number; }' is not assignable to parameter of type 'Partial<User>'.
+```
+
+### Associations
 
 TODO
 
-### Contributing
+## Contributing
 
 TODO
 
-### Credits
+## Credits
 
-TODO
+This project name was inspired by Patrick Rothfuss' _Kingkiller Chronicles_ books. In the books, the workshop is called the Fishery, which is short for Artificery.
 
-### License
+## License
 
 Fishery is Copyright © 2019 Stephen Hanson and thoughtbot. It is free
 software, and may be redistributed under the terms specified in the
