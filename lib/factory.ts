@@ -2,9 +2,6 @@ export type GeneratorFnOptions = {
   sequence: number;
 };
 export type GeneratorFn<T> = (opts: GeneratorFnOptions) => T;
-export type GeneratorsMap = {
-  [key: string]: GeneratorFn<any>;
-};
 
 let id = 1;
 const nextId = () => id++;
