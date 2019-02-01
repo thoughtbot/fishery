@@ -70,7 +70,11 @@ TODO
 
 ## Contributing
 
-TODO
+See the [CONTRIBUTING] document.
+Thank you, [contributors]!
+
+  [CONTRIBUTING]: CONTRIBUTING.md
+  [contributors]: https://github.com/thoughtbot/templates/graphs/contributors
 
 ## Credits
 
