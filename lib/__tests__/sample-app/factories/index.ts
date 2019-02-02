@@ -1,12 +1,13 @@
 import user from './user';
 import post from './post';
 import { register } from '../../../register';
+import { Factories } from '../types';
 
-export const factories = {
+export const factories: Factories = {
   user,
   post,
 };
 
-export type Factories = typeof factories;
+register(factories);
 
-register<Factories>(factories);
+export { user, post };

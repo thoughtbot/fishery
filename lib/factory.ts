@@ -1,16 +1,20 @@
 import { GeneratorFn } from './types';
 import { FactoryBuilder } from './builder';
 
-export class Factory<T> {
-  nextId: number = 0;
-  constructor(private generator: GeneratorFn<T>) {}
+interface AnyFactories {
+  [key: string]: Factory<any>;
+}
 
-  static define<T>(generator: GeneratorFn<T>) {
-    return new Factory<T>(generator);
+export class Factory<T, F = any> {
+  nextId: number = 0;
+  constructor(private generator: GeneratorFn<T, F>) {}
+
+  static define<T, F = AnyFactories>(generator: GeneratorFn<T, F>) {
+    return new Factory<T, F>(generator);
   }
 
   build(options: Partial<T> = {}): T {
-    return new FactoryBuilder<T>(
+    return new FactoryBuilder<T, F>(
       this.generator,
       this.nextId++,
       options,

@@ -1,7 +1,7 @@
 import { Factory } from '../../../factory';
-import { User } from '../types';
+import { User, Factories } from '../types';
 
-export default Factory.define<User>(
+export default Factory.define<User, Factories>(
   ({ sequence, params, instance, factories }) => ({
     id: `user-${sequence}`,
     name: 'Bob',

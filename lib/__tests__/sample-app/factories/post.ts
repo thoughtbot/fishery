@@ -1,8 +1,8 @@
 import { Factory } from '../../../factory';
-import { Post } from '../types';
-import { Factories } from './index';
+import { Post, Factories } from '../types';
+import user from './user';
 
-export default Factory.define<Post>(
+export default Factory.define<Post, Factories>(
   ({ sequence, params, instance, factories }) => ({
     id: sequence,
     title: 'A Post',
