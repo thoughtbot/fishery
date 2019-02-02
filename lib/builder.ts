@@ -1,4 +1,5 @@
 import { GeneratorFn, HookFn, GeneratorFnOptions } from './types';
+import { configuration } from '../lib/register';
 
 export class FactoryBuilder<T> {
   private afterCreate?: HookFn<T>;
@@ -9,16 +10,21 @@ export class FactoryBuilder<T> {
   ) {}
 
   build() {
+    const object = {} as T; // kinda lying. Might be a problem
     const generatorOptions: GeneratorFnOptions<T> = {
       sequence: this.sequence,
       afterCreate: this.setAfterCreate,
       params: this.params,
+      instance: object,
+      factories: configuration.factories,
     };
 
-    const object: T = {
+    const tmpObject: T = {
       ...this.generator(generatorOptions),
       ...this.params,
     };
+
+    Object.assign(object, tmpObject);
 
     this._callAfterCreate(object);
     return object;

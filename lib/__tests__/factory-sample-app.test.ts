@@ -6,13 +6,13 @@ describe('Factory.build', () => {
     expect(user.id).not.toBeNull();
     expect(user.name).toEqual('susan');
   });
+});
 
-  // https://www.typescriptlang.org/docs/handbook/generics.html
-  // I wonder if it might make sense to require classes to be made for types, then can do like createInstance in above??
-  describe('build shorthand', () => {
-    it('calls build', () => {
-      const user = factories.user.build({ name: 'susan' });
-      expect(user.id).not.toBeNull();
-    });
+describe('Associations', () => {
+  it('works, recursively', () => {
+    const user = factories.user.build();
+    expect(user.post).not.toBeNull();
+    expect(user.post.title).toEqual('A Post');
+    expect(user.post.user).toEqual(user);
   });
 });
