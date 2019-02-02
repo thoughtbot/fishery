@@ -22,25 +22,35 @@ yarn add git+ssh://git@github.com/thoughtbot/fishery
 
 It is generally recommended to define one factory per file and then combine them together to form a `factories` object which can then be used in tests, Storybook, etc.:
 
+### Define factories
+
 ```typescript
 // factories/user.ts
 import { Factory } from 'fishery';
 import { User } from '../types';
 
 export default Factory.define<User>(({ sequence }) => ({
-  id: `user-${sequence}`,
+  id: sequence,
   name: 'Bob',
 }));
 ```
 
+### Combine factories
+
+This step is optional and is just for convenience.
+
 ```typescript
 // factories/index.ts
 import user from './user';
+import post from './post';
 
 export const factories = {
   user,
+  post,
 };
 ```
+
+### Use factories
 
 ```typescript
 // my-test.test.ts
@@ -57,24 +67,42 @@ Factories are typed, so using the factory from the above example, these would bo
 
 ```typescript
 const user = factories.user.build();
-user.email; // type error! Property 'email' does not exist on type 'User'
+user.foo; // type error! Property 'foo' does not exist on type 'User'
 ```
 
 ```typescript
-const user = factories.user.build({ age: 18 }); // type error! Argument of type '{ age: number; }' is not assignable to parameter of type 'Partial<User>'.
+const user = factories.user.build({ foo: 'bar' }); // type error! Argument of type '{ foo: string; }' is not assignable to parameter of type 'Partial<User>'.
+```
+
+### After-create hook
+
+You can instruct factories to execute some code after an object is created:
+
+```typescript
+export default Factory.define<User>(({ sequence, afterCreate }) => {
+  // TypeScript knows the type of `user` here 🎉
+  afterCreate(user => {
+    user.name = 'Susan';
+  });
+
+  return {
+    id: sequence,
+    name: 'Bob',
+  };
+});
 ```
 
 ### Associations
 
-TODO
+Coming soon...
 
 ## Contributing
 
 See the [CONTRIBUTING] document.
 Thank you, [contributors]!
 
-  [CONTRIBUTING]: CONTRIBUTING.md
-  [contributors]: https://github.com/thoughtbot/templates/graphs/contributors
+[CONTRIBUTING]: CONTRIBUTING.md
+[contributors]: https://github.com/thoughtbot/templates/graphs/contributors
 
 ## Credits
 
