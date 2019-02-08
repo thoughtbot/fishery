@@ -1,10 +1,10 @@
 import { GeneratorFn, HookFn, GeneratorFnOptions } from './types';
-import { configuration } from '../lib/register';
 
 export class FactoryBuilder<T, F> {
   private afterCreate?: HookFn<T>;
   constructor(
     private generator: GeneratorFn<T, F>,
+    private factories: F,
     private sequence: number,
     private params: Partial<T>,
   ) {}
@@ -14,9 +14,9 @@ export class FactoryBuilder<T, F> {
     const generatorOptions: GeneratorFnOptions<T, F> = {
       sequence: this.sequence,
       afterCreate: this.setAfterCreate,
-      params: this.params,
+      factories: this.factories,
       instance: object,
-      factories: configuration.factories,
+      params: this.params,
     };
 
     const tmpObject: T = {
