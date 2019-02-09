@@ -1,5 +1,6 @@
 import { Factory } from '../factory';
 import { HookFn } from '../types';
+import { register } from '../register';
 
 type User = {
   id: string;
@@ -13,6 +14,8 @@ const userFactory = Factory.define<User>(({ sequence }) => {
     name,
   };
 });
+
+register({ user: userFactory });
 
 describe('factory.build', () => {
   it('creates the object', () => {
@@ -41,6 +44,7 @@ describe('factory.buildList', () => {
       return { id: '1', name: 'Ralph' };
     });
 
+    register({ user: factory });
     expect(factory.buildList(2).every(u => u.name === 'Bill')).toBeTruthy();
     expect(afterCreateFn).toHaveBeenCalledTimes(2);
   });
@@ -56,6 +60,7 @@ describe('afterCreate', () => {
       return { id: '1', name: 'Ralph' };
     });
 
+    register({ user: factory });
     expect(factory.build().id).toEqual('bla');
   });
 
@@ -66,6 +71,7 @@ describe('afterCreate', () => {
         return { id: '1', name: 'Ralph' };
       });
 
+      register({ user: factory });
       expect(() => {
         factory.build();
       }).toThrowError(/must be a function/);

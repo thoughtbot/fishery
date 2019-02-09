@@ -1,24 +1,30 @@
 import { GeneratorFn, HookFn, GeneratorFnOptions } from './types';
 
-export class FactoryBuilder<T> {
+export class FactoryBuilder<T, F> {
   private afterCreate?: HookFn<T>;
   constructor(
-    private generator: GeneratorFn<T>,
+    private generator: GeneratorFn<T, F>,
+    private factories: F,
     private sequence: number,
     private params: Partial<T>,
   ) {}
 
   build() {
-    const generatorOptions: GeneratorFnOptions<T> = {
+    const object = {} as T; // kinda lying. Might be a problem
+    const generatorOptions: GeneratorFnOptions<T, F> = {
       sequence: this.sequence,
       afterCreate: this.setAfterCreate,
+      factories: this.factories,
+      instance: object,
       params: this.params,
     };
 
-    const object: T = {
+    const tmpObject: T = {
       ...this.generator(generatorOptions),
       ...this.params,
     };
+
+    Object.assign(object, tmpObject);
 
     this._callAfterCreate(object);
     return object;
