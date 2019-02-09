@@ -1,4 +1,4 @@
-import { Factory, AnyFactories } from './factory';
+import { AnyFactories } from './factory';
 
 // TODO: would like to type this argument as AnyFactories but issue with
 // inheritance since user-defined Factories will not have index property set

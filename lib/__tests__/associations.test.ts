@@ -1,6 +1,4 @@
-import { Factory } from '../factory';
-import { HookFn } from '../types';
-import { register } from '../register';
+import { Factory, HookFn, register } from 'fishery';
 
 interface Post {
   title: string;

@@ -1,4 +1,4 @@
-import { Factory } from '../../factory';
+import { Factory } from 'fishery';
 
 export interface Factories {
   user: Factory<User>;

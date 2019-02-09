@@ -1,4 +1,4 @@
-import { Factory } from '../../../factory';
+import { Factory } from 'fishery';
 import { User, Factories } from '../types';
 
 export default Factory.define<User, Factories>(

@@ -1,6 +1,4 @@
-import { Factory } from '../factory';
-import { HookFn } from '../types';
-import { register } from '../register';
+import { register, Factory, HookFn } from 'fishery';
 
 type User = {
   id: string;
