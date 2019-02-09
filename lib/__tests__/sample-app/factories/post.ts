@@ -1,6 +1,5 @@
-import { Factory } from '../../../factory';
+import { Factory } from 'fishery';
 import { Post, Factories } from '../types';
-import user from './user';
 
 export default Factory.define<Post, Factories>(
   ({ sequence, params, instance, factories }) => ({

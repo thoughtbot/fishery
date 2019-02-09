@@ -6,6 +6,10 @@
     "outDir": "./dist",
     "strict": true,
     "declaration": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "baseUrl": ".",
+    "paths": {
+      "fishery": ["lib/index"]
+    }
   }
 }
