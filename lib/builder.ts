@@ -10,22 +10,15 @@ export class FactoryBuilder<T, F> {
   ) {}
 
   build() {
-    const object = {} as T; // kinda lying. Might be a problem
     const generatorOptions: GeneratorFnOptions<T, F> = {
       sequence: this.sequence,
       afterCreate: this.setAfterCreate,
       factories: this.factories,
-      instance: object,
       params: this.params,
     };
 
-    const tmpObject: T = {
-      ...this.generator(generatorOptions),
-      ...this.params,
-    };
-
-    Object.assign(object, tmpObject);
-
+    const object = this.generator(generatorOptions);
+    Object.assign(object, this.params);
     this._callAfterCreate(object);
     return object;
   }

@@ -31,7 +31,7 @@ It is recommended to define one factory per file and then combine them together 
 ```typescript
 // factories/user.ts
 import { Factory } from 'fishery';
-import { User } from '../types';
+import { User } from '../my-types';
 
 export default Factory.define<User>(({ sequence }) => ({
   id: sequence,
@@ -49,12 +49,10 @@ import { register } from 'fishery';
 import user from './user';
 import post from './post';
 
-export const factories = {
+export const factories = register({
   user,
   post,
-};
-
-register(factories);
+});
 ```
 
 ### Use factories
@@ -86,15 +84,19 @@ const user = factories.user.build({ foo: 'bar' }); // type error! Argument of ty
 If your factory references another factory, use the `factories` object provided by the generator function:
 
 ```typescript
-const userFactory = Factory.define<User, Factories>(
-  ({ factories, instance }) => ({
-    name: 'Bob',
-    posts: [factories.post.build({ user: instance })],
+const postFactory = Factory.define<Post, Factories>(
+  ({ factories, params }) => ({
+    title: 'My Blog Post',
+    author: params.author || factories.user.build(),
   }),
 );
 ```
 
-Using the factories object helps avoid circular dependency issues where two factories need to reference each other. In the example above, note that a second type parameter was passed to `Factory.define`, called `Factories`. This represents the type of the combined factories and should be supplied in order to get typechecking of the `factories` object. The type should be defined like:
+There are two things to note in the example above:
+
+#### `factories` and the `Factories` type parameter
+
+In the above example, we used `factories` which is supplied by the factory generator function. Using the factories object helps avoid circular import issues where two factories need to reference each other. The `factories` object represents the combined factories object that was supplied to `register` when setting up Fishery. To get type-checking of `factories`, a second type parameter should be passed to `Factory.define`, called `Factories`. The type should be defined like:
 
 ```typescript
 export interface Factories {
@@ -103,46 +105,41 @@ export interface Factories {
 }
 ```
 
-### Considerations with expensive operations
+#### Use `params` to access passed in properties
 
-When factories are built, they are created as defined, and then user-supplied parameters are overlaid on top. This means that if your factory performs expensive operations, they aren't necessarily short-circuited when you provide different parameters. For example, with this factory:
+In the above `postsfactory` example, the author property is calculated as `author: params.author || factories.user.build()`. The `params` object represents the properties bassed to the factory's `build` method. With this definition, if we create a post with `postsFactory.build({ author })`, then `factories.user.build()` is conveniently not executed. This can be handy in preventing infinite loops or expensive operations. 
 
-```typescript
-const userFactory = Factory.define<User, Factories>(
-  ({ factories, instance }) => ({
-    name: 'Bob',
-    posts: [factories.post.build({ user: instance })],
-  }),
-);
-
-userFactory.build({ posts: [] })
-```
-
-the regular factory would run (creating the posts association), and then our supplied empty array of posts would be assigned. If you'd like to prevent this behavior, for example in the case of an expensive operation, you can explicitly check if a parameter was supplied and short-circuit execution:
+It is important to note that if the user factory has a call to `factories.post.build()` (without specifying the author), an infinite loop would still occur. The user factory would need to either not automatically create a post or pass itself as the author in an `afterCreate`, like:
 
 ```typescript
 const userFactory = Factory.define<User, Factories>(
-  ({ factories, params, instance }) => ({
-    name: 'Bob',
-    posts: params.posts || [factories.post.build({ user: instance })],
-  }),
+  ({ factories, afterCreate }) => {
+    afterCreate(user => user.posts.push(factories.post.build({ author: user })));
+    return {
+      name: 'Bob',
+      posts: [],
+    };
+  },
 );
 ```
+In normal situations, you should not have to access `params` directly. The properties passed in to `build` are automatically overlaid on top of the default properties defined by the factory.
 
 ### After-create hook
 
-You can instruct factories to execute some code after an object is created:
+You can instruct factories to execute some code after an object is created. This can be useful if a reference to the object is needed, eg. when setting up relationships:
 
 ```typescript
-export default Factory.define<User>(({ sequence, afterCreate }) => {
-  // TypeScript knows the type of `user` here 🎉
+export default Factory.define<User, Factories>(({ factories, sequence, afterCreate }) => {
   afterCreate(user => {
-    user.name = 'Susan';
+    if(user.posts.length === 0) {
+      user.posts.push(factories.post.build({ author: user })
+    }
   });
 
   return {
     id: sequence,
     name: 'Bob',
+    posts: []
   };
 });
 ```

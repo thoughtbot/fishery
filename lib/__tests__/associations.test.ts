@@ -4,6 +4,7 @@ interface Post {
   title: string;
   user: User;
 }
+
 interface User {
   name: string;
   posts: Array<Post>;
@@ -28,18 +29,21 @@ describe('associations', () => {
     factory.build();
   });
 
-  it('can create inverse associations', () => {
+  it('can create simple has-many/belongs-to associations', () => {
     const userFactory = Factory.define<User, Factories>(
-      ({ factories, instance }) => ({
-        name: 'Bob',
-        posts: [factories.post.build({ user: instance })],
-      }),
+      ({ factories, afterCreate }) => {
+        afterCreate(user => user.posts.push(factories.post.build({ user })));
+        return {
+          name: 'Bob',
+          posts: [],
+        };
+      },
     );
 
     const postFactory = Factory.define<Post, Factories>(
-      ({ factories, instance, params }) => ({
+      ({ factories, params }) => ({
         title: 'A Post',
-        user: params.user || factories.user.build({ posts: [instance] }),
+        user: params.user || factories.user.build(),
       }),
     );
 
