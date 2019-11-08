@@ -11,5 +11,6 @@
     "paths": {
       "fishery": ["lib/index"]
     }
-  }
+  },
+  "exclude": ["node_modules", "dist", "**/__tests__/**"]
 }

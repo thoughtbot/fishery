@@ -4,6 +4,9 @@
   "description": "A library for setting up JavaScript objects as test data",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist/"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "jest",
