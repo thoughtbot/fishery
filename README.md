@@ -1,25 +1,23 @@
 # Fishery
 
-**This project is still in early planning stages. Its API is subject to change without notice.**
+**This project is still in early stages. Prior to a 1.0 release, its API is subject to change without notice.**
 
 Fishery is a library for setting up JavaScript objects for use in tests, Storybook, and anywhere else you need to set up data. It is modeled after the Ruby gem, [factory_bot][factory_bot].
 
 Fishery is built with TypeScript in mind. Factories return typed objects, so you can be confident that the data used in your tests is valid. If you aren't using TypeScript, that's fine too – Fishery still works, just without the extra typechecking that comes with TypeScript.
 
-## Getting Started
+## Installation
 
-Coming soon to NPM. In the meantime, the only way to use this is to clone this repo and link manually:
-
-```
-git clone git@github.com:thoughtbot/fishery.git
-cd fishery
-npm link
-```
-
-Now, from your project:
+First, install fishery with:
 
 ```
-npm link fishery
+npm install --save fishery
+```
+
+or
+
+```
+yarn add fishery
 ```
 
 ## Usage
@@ -154,7 +152,7 @@ Thank you, [contributors]!
 
 ## Credits
 
-This project name was inspired by Patrick Rothfuss' _Kingkiller Chronicles_ books. In the books, the workshop is called the Fishery, which is short for Artificery.
+This project name was inspired by Patrick Rothfuss' _Kingkiller Chronicles_ books. In the books, the artificery, or workshop, is called the Fishery for short.
 
 ## License
 
