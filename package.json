@@ -24,10 +24,10 @@
   "homepage": "https://github.com/thoughtbot/fishery#readme",
   "devDependencies": {
     "@types/jest": "^23.3.12",
-    "jest": "^23.6.0",
-    "prettier": "^1.15.3",
-    "ts-jest": "^23.10.5",
-    "typescript": "^3.2.2"
+    "jest": "^24.9.0",
+    "prettier": "^1.18.2",
+    "ts-jest": "^24.1.0",
+    "typescript": "^3.7.2"
   },
   "prettier": {
     "useTabs": false,
