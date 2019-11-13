@@ -8,7 +8,7 @@
     "dist/"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json",
     "test": "jest",
     "testinit": "jest --init"
   },
