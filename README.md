@@ -120,7 +120,69 @@ const userFactory = Factory.define<User, Factories>(
   },
 );
 ```
+
 In normal situations, you should not have to access `params` directly. The properties passed in to `build` are automatically overlaid on top of the default properties defined by the factory.
+
+### Factories with inputs that don't match output object (transient params)
+
+Factories can accept parameters that are not present in the resulting object.
+We call these `transientParams`. To use `transientParams`, make use of the
+`transientParams` property in your factory function, and add a third generic
+type that you pass to `Factory.define`:
+
+```typescript
+interface User {
+  firstName: string;
+  lastName: string;
+  address: { city: string; state: string; country: string };
+}
+
+interface UserTransientParams {
+  name: string;
+  city: string;
+  stateCode: string;
+  country: string;
+}
+
+const userFactory = Factory.define<User, any, UserTransientParams>(
+  ({ transientParams }) => {
+    const {
+      name = 'Sharon Jones',
+      city = 'Grand Rapids',
+      stateCode = 'MI',
+      country = 'USA',
+    } = transientParams;
+
+    // probably don't actually do this in real life
+    const [firstName, lastName] = name.split(' ');
+
+    return {
+      firstName,
+      lastName,
+      address: {
+        city,
+        state: stateCode,
+        country,
+      },
+    };
+  },
+);
+```
+
+Then, to construct an object with transient params, pass the transient params as the second argument to `build`:
+
+```typescript
+const user = factories.user.build({}, { city: 'Ann Arbor' });
+user.address.city // 'Ann Arbor'
+```
+
+Any regular params you pass will still take precedence over the transient params:
+
+```typescript
+const user = factories.user.build({ firstName: 'Sue' }, { name: 'Bill Smith' });
+user.firstName // 'Sue'
+user.lastName // Smith
+```
 
 ### After-create hook
 

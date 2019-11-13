@@ -5,35 +5,40 @@ export interface AnyFactories {
   [key: string]: Factory<any>;
 }
 
-export class Factory<T, F = any> {
+export class Factory<T, F = any, I = any> {
   nextId: number = 0;
   factories?: F;
 
-  constructor(private generator: GeneratorFn<T, F>) {}
+  constructor(private generator: GeneratorFn<T, F, I>) {}
 
-  static define<T, F = any>(generator: GeneratorFn<T, F>) {
-    return new Factory<T, F>(generator);
+  static define<T, F = any, I = any>(generator: GeneratorFn<T, F, I>) {
+    return new Factory<T, F, I>(generator);
   }
 
-  build(options: Partial<T> = {}): T {
+  build(params: Partial<T> | null = {}, transientParams: Partial<I> = {}): T {
     if (!this.factories) {
       throw new Error(
         'Factories have not been registered. Call `register` before using factories',
       );
     }
 
-    return new FactoryBuilder<T, F>(
+    return new FactoryBuilder<T, F, I>(
       this.generator,
       this.factories,
       this.nextId++,
-      options,
+      params,
+      transientParams,
     ).build();
   }
 
-  buildList(number: number, options: Partial<T> = {}): T[] {
+  buildList(
+    number: number,
+    params: Partial<T> | null = {},
+    transientParams: Partial<I> = {},
+  ): T[] {
     let list: T[] = [];
     for (let i = 0; i < number; i++) {
-      list.push(this.build(options));
+      list.push(this.build(params, transientParams));
     }
 
     return list;
