@@ -1,5 +1,7 @@
 # Fishery
 
+[![CircleCI](https://circleci.com/gh/thoughtbot/fishery.svg?style=svg)](https://circleci.com/gh/thoughtbot/fishery)
+
 **This project is still in early stages. Prior to a 1.0 release, its API is subject to change without notice.**
 
 Fishery is a library for setting up JavaScript objects for use in tests, Storybook, and anywhere else you need to set up data. It is modeled after the Ruby gem, [factory_bot][factory_bot].
