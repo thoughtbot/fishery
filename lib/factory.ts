@@ -1,4 +1,4 @@
-import { GeneratorFn } from './types';
+import { GeneratorFn, BuildOptions } from './types';
 import { FactoryBuilder } from './builder';
 
 export interface AnyFactories {
@@ -15,7 +15,10 @@ export class Factory<T, F = any, I = any> {
     return new Factory<T, F, I>(generator);
   }
 
-  build(params: Partial<T> | null = {}, transientParams: Partial<I> = {}): T {
+  build(
+    params: Partial<T> = {},
+    options: BuildOptions<I> = { transient: {} },
+  ): T {
     if (!this.factories) {
       throw new Error(
         'Factories have not been registered. Call `register` before using factories',
@@ -27,18 +30,18 @@ export class Factory<T, F = any, I = any> {
       this.factories,
       this.nextId++,
       params,
-      transientParams,
+      options.transient,
     ).build();
   }
 
   buildList(
     number: number,
-    params: Partial<T> | null = {},
-    transientParams: Partial<I> = {},
+    params: Partial<T> = {},
+    options: BuildOptions<I> = { transient: {} },
   ): T[] {
     let list: T[] = [];
     for (let i = 0; i < number; i++) {
-      list.push(this.build(params, transientParams));
+      list.push(this.build(params, options));
     }
 
     return list;

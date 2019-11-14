@@ -1,7 +1,6 @@
 import { Factory, HookFn, register } from 'fishery';
-import { factories } from './sample-app/factories';
 
-describe('Input types', () => {
+describe('Transient params', () => {
   interface User {
     firstName: string;
     lastName: string;
@@ -47,24 +46,34 @@ describe('Input types', () => {
     expect(user.address.country).toEqual('USA');
   });
 
-  it('allows specifying different input type than output type', () => {
-    const userUSA = factories.user.build(null, { state: 'IL' });
+  it('overrides default when passed', () => {
+    const userUSA = factories.user.build({}, { transient: { state: 'IL' } });
     expect(userUSA.address.state).toEqual('IL');
   });
 
-  it('does not copy the input type properties to the built object', () => {
-    const user = factories.user.build(null, { country: 'USA' });
+  it('does not copy the transient params to the built object', () => {
+    const user = factories.user.build({}, { transient: { country: 'USA' } });
     expect((user as any).country).toBeUndefined();
   });
 
   it('can override transient params with regular params', () => {
     const user = factories.user.build(
       { firstName: 'Sue' },
-      { name: 'Joe Smith' },
+      { transient: { name: 'Joe Smith' } },
     );
     expect(user).toMatchObject({
       firstName: 'Sue',
       lastName: 'Smith',
     });
+  });
+
+  it('works with buildList', () => {
+    const users = factories.user.buildList(
+      1,
+      {},
+      { transient: { city: 'Detroit' } },
+    );
+
+    expect(users[0].address.city).toEqual('Detroit');
   });
 });
