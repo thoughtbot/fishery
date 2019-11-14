@@ -122,7 +122,67 @@ const userFactory = Factory.define<User, Factories>(
   },
 );
 ```
+
 In normal situations, you should not have to access `params` directly. The properties passed in to `build` are automatically overlaid on top of the default properties defined by the factory.
+
+### Params that don't map to the result object (transient params)
+
+Factories can accept parameters that are not part of the resulting object. We
+call these transient params. When building an object, pass any transient
+params in the second argument:
+
+```typescript
+const user = factories.user.build({}, { transient: { registered: true } });
+```
+
+Transient params are passed in to your factory function and can then be used
+however you like:
+
+```typescript
+interface User {
+  name: string;
+  posts: Post[];
+  memberId: string | null;
+  permissions: { canPost: boolean };
+}
+
+interface UserTransientParams {
+  registered: boolean;
+  numPosts: number;
+}
+
+const userFactory = Factory.define<User, Factories, UserTransientParams>(
+  ({ transientParams, factories, sequence }) => {
+    const { registered, numPosts = 1 } = transientParams;
+
+    const user = {
+      name: 'Susan Velasquez',
+      posts: factories.posts.buildList(numPosts),
+      memberId: registered ? `member-${sequence}` : null,
+      permissions: {
+        canPost: registered,
+      },
+    };
+  }
+);
+```
+
+In the example above, we also created a type called `UserTransientParams` and
+passed it as the third generic type to `define`. This isn't required but
+gives you type checking of transient params, both in the factory and when
+calling `build`.
+
+When constructing objects, any regular params you pass to `build` take
+precedence over the transient params:
+
+```typescript
+const user = factories.user.build(
+  { memberId: '1' },
+  { transient: { registered: true } }
+);
+user.memberId // '1'
+user.permissions.canPost  // true
+```
 
 ### After-create hook
 
