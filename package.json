@@ -24,6 +24,7 @@
   "homepage": "https://github.com/thoughtbot/fishery#readme",
   "devDependencies": {
     "@types/jest": "^23.3.12",
+    "@types/lodash.merge": "^4.6.6",
     "jest": "^24.9.0",
     "prettier": "^1.18.2",
     "ts-jest": "^24.1.0",
@@ -43,5 +44,8 @@
         }
       }
     ]
+  },
+  "dependencies": {
+    "lodash.merge": "^4.6.2"
   }
 }

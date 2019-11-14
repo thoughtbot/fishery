@@ -1,4 +1,4 @@
-import { GeneratorFn, BuildOptions } from './types';
+import { DeepPartial, GeneratorFn, BuildOptions } from './types';
 import { FactoryBuilder } from './builder';
 
 export interface AnyFactories {
@@ -16,7 +16,7 @@ export class Factory<T, F = any, I = any> {
   }
 
   build(
-    params: Partial<T> = {},
+    params: DeepPartial<T> = {},
     options: BuildOptions<I> = { transient: {} },
   ): T {
     if (!this.factories) {
@@ -36,7 +36,7 @@ export class Factory<T, F = any, I = any> {
 
   buildList(
     number: number,
-    params: Partial<T> = {},
+    params: DeepPartial<T> = {},
     options: BuildOptions<I> = { transient: {} },
   ): T[] {
     let list: T[] = [];

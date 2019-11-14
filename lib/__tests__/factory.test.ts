@@ -3,6 +3,7 @@ import { register, Factory, HookFn } from 'fishery';
 type User = {
   id: string;
   name: string;
+  address?: { city: string; state: string };
 };
 
 const userFactory = Factory.define<User>(({ sequence }) => {
@@ -10,6 +11,10 @@ const userFactory = Factory.define<User>(({ sequence }) => {
   return {
     id: `user-${sequence}`,
     name,
+    address: {
+      city: 'Detroit',
+      state: 'MI',
+    },
   };
 });
 
@@ -20,6 +25,12 @@ describe('factory.build', () => {
     const user = userFactory.build({ name: 'susan' });
     expect(user.id).not.toBeNull();
     expect(user.name).toEqual('susan');
+    expect(user.address?.state).toEqual('MI');
+  });
+
+  it('accepts partials of nested objects', () => {
+    const user = userFactory.build({ address: { city: 'Ann Arbor' } });
+    expect(user.address).toMatchObject({ city: 'Ann Arbor', state: 'MI' });
   });
 });
 
@@ -38,7 +49,6 @@ describe('factory.buildList', () => {
 
     const factory = Factory.define<User>(({ afterCreate }) => {
       afterCreate(afterCreateFn);
-
       return { id: '1', name: 'Ralph' };
     });
 
