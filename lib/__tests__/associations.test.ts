@@ -1,4 +1,4 @@
-import { Factory, HookFn, register } from 'fishery';
+import { Factory, register } from 'fishery';
 
 interface Post {
   title: string;
@@ -29,10 +29,17 @@ describe('associations', () => {
     factory.build();
   });
 
-  it('can create simple has-many/belongs-to associations', () => {
+  it('can create bi-directional has-many/belongs-to associations', () => {
     const userFactory = Factory.define<User, Factories>(
-      ({ factories, afterCreate }) => {
-        afterCreate(user => user.posts.push(factories.post.build({ user })));
+      ({ factories, afterCreate, transientParams }) => {
+        const { skipPosts } = transientParams;
+
+        afterCreate(user => {
+          if (!skipPosts) {
+            user.posts.push(factories.post.build({}, { transient: { user } }));
+          }
+        });
+
         return {
           name: 'Bob',
           posts: [],
@@ -41,10 +48,16 @@ describe('associations', () => {
     );
 
     const postFactory = Factory.define<Post, Factories>(
-      ({ factories, params }) => ({
-        title: 'A Post',
-        user: params.user || factories.user.build(),
-      }),
+      ({ factories, transientParams, afterCreate }) => {
+        afterCreate(post => {
+          post.user.posts.push(post);
+        });
+
+        return {
+          title: 'A Post',
+          user: transientParams.user || factories.user.build(),
+        };
+      },
     );
 
     register({
@@ -54,6 +67,6 @@ describe('associations', () => {
 
     const user = userFactory.build();
     expect(user.name).toEqual('Bob');
-    expect(user.posts[0]).toMatchObject({ title: 'A Post', user });
+    expect(user.posts[0].user).toEqual(user);
   });
 });

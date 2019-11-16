@@ -68,7 +68,7 @@ const user = factories.user.build({ name: 'Susan' });
 
 ### Typechecking
 
-Factories are typed, so using the factory from the above example, these would both cause TypeScript compile errors:
+Factories are typed, so the following would cause TypeScript compile errors if using the factory defined above:
 
 ```typescript
 const user = factories.user.build();
@@ -81,28 +81,41 @@ const user = factories.user.build({ foo: 'bar' }); // type error! Argument of ty
 
 ### Associations
 
-If your factory references another factory, use the `factories` object provided by the generator function:
+If your factory references another factory, use the `factories` object
+provided by the generator function:
 
 ```typescript
 const postFactory = Factory.define<Post, Factories>(
   ({ factories, params }) => ({
     title: 'My Blog Post',
-    author: params.author || factories.user.build(),
+    author: factories.user.build(),
   }),
 );
 ```
 
-There are two things to note in the example above:
-
-#### `factories` and the `Factories` type parameter
-
-In the above example, we used `factories` which is supplied by the factory generator function. Using the factories object helps avoid circular import issues where two factories need to reference each other. The `factories` object represents the combined factories object that was supplied to `register` when setting up Fishery. To get type-checking of `factories`, a second type parameter should be passed to `Factory.define`, called `Factories`. The type should be defined like:
+In the above example, the `Factories` generic parameter is passed to
+`define`. This is optional but recommended in order to get type-checking of
+the `factories` object. You can define your `Factories` object like this:
 
 ```typescript
 export interface Factories {
   user: Factory<User>;
   post: Factory<Post>;
 }
+```
+
+Once you've defined your `Factories` type, it can also be used when
+registering your factories. This ensures that your `Factories` type is always
+in sync with the actual factories that you have registered:
+
+```typescript
+// factories/index.ts
+import { register } from 'fishery';
+import user from './user';
+import post from './post';
+import { Factories } from './types';
+
+export const factories: Factories = register({ user, post });
 ```
 
 #### Use `params` to access passed in properties

@@ -6,8 +6,8 @@ export interface AnyFactories {
 }
 
 export class Factory<T, F = any, I = any> {
-  nextId: number = 0;
-  factories?: F;
+  private nextId: number = 0;
+  private factories?: F;
 
   constructor(private generator: GeneratorFn<T, F, I>) {}
 
@@ -45,5 +45,9 @@ export class Factory<T, F = any, I = any> {
     }
 
     return list;
+  }
+
+  setFactories(factories: F) {
+    this.factories = factories;
   }
 }
