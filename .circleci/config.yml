@@ -18,4 +18,7 @@ jobs:
           key: yarn-packages-{{ checksum "yarn.lock" }}
           paths:
             - ~/.cache/yarn
+      - run:
+          name: Check code formatting
+          command: yarn verifyPretty
       - run: yarn test
