@@ -24,7 +24,13 @@ Make sure the tests pass:
 yarn test
 ```
 
-Make your change, with new passing tests. Follow the [style guide][style].
+Make your change, with new passing tests. Before committing your changes, run the code formatter:
+
+```bash
+yarn pretty
+```
+
+Follow the [style guide][style].
 
 [style]: https://github.com/thoughtbot/guides/tree/master/style
 
