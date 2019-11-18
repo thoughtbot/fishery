@@ -40,7 +40,7 @@ export default Factory.define<User>(({ sequence, factories }) => ({
   id: sequence,
   name: 'Bob',
   address: { city: 'Grand Rapids', state: 'MI', country: 'USA' },
-  posts: factories.post.buildList(2)
+  posts: factories.post.buildList(2),
 }));
 ```
 
@@ -66,21 +66,21 @@ Pass parameters as the first argument to `build` to override your factory defaul
 
 `build` also supports a seconds argument with the following keys:
 
-* `transient`: data for use in your factory that doesn't get overlaid onto your result object. More on this in the [Transient Params](#params-that-dont-map-to-the-result-object-transient-params) section
-* `associations`: often not required but can be useful in the case of bi-directional associations. More on this in the [Associations](#Associations) section
+- `transient`: data for use in your factory that doesn't get overlaid onto your result object. More on this in the [Transient Params](#params-that-dont-map-to-the-result-object-transient-params) section
+- `associations`: often not required but can be useful in the case of bi-directional associations. More on this in the [Associations](#Associations) section
 
 ```typescript
 // my-test.test.ts
 import { factories } from './factories';
 
 const user = factories.user.build({
-  name: "Susan",
-  address: { city: "Detroit" }
+  name: 'Susan',
+  address: { city: 'Detroit' },
 });
 
-user.name          // Susan
-user.address.city  // Detroit
-user.address.state // MI (from factory)
+user.name; // Susan
+user.address.city; // Detroit
+user.address.state; // MI (from factory)
 ```
 
 ## Documentation
@@ -101,13 +101,13 @@ const user = factories.user.build({ foo: 'bar' }); // type error! Argument of ty
 ```typescript
 export default Factory.define<User, Factories, UserTransientParams>(
   ({ sequence, params, transientParams, associations, afterCreate }) => {
-    params.firstName    // Property 'firstName' does not exist on type 'DeepPartial<User>
-    transientParams.foo // Property 'foo' does not exist on type 'Partial<UserTransientParams>'
-    associations.bar    // Property 'bar' does not exist on type 'Partial<User>'
+    params.firstName; // Property 'firstName' does not exist on type 'DeepPartial<User>
+    transientParams.foo; // Property 'foo' does not exist on type 'Partial<UserTransientParams>'
+    associations.bar; // Property 'bar' does not exist on type 'Partial<User>'
 
     afterCreate(user => {
-      user.foo // Property 'foo' does not exist on type 'User'
-    })
+      user.foo; // Property 'foo' does not exist on type 'User'
+    });
 
     return {
       id: `user-${sequence}`,
@@ -124,12 +124,10 @@ If your factory references another factory, use the `factories` object
 provided to the factory:
 
 ```typescript
-const postFactory = Factory.define<Post, Factories>(
-  ({ factories }) => ({
-    title: 'My Blog Post',
-    author: factories.user.build(),
-  }),
-);
+const postFactory = Factory.define<Post, Factories>(({ factories }) => ({
+  title: 'My Blog Post',
+  author: factories.user.build(),
+}));
 ```
 
 If you'd like to be able to pass in an association when building your object and short-circuit the call to `factories.xxx.build()`, use the `associations` variable provided to your factory:
@@ -146,7 +144,7 @@ const postFactory = Factory.define<Post, Factories>(
 Then build your object like this:
 
 ```typescript
-factories.post.build({}, { associations: { author: susan }})
+factories.post.build({}, { associations: { author: susan } });
 ```
 
 #### Typing the `factories` factory argument
@@ -185,18 +183,16 @@ explicitly access the params in your factory. This can, however, be useful,
 for example, if your factory uses the params to compute other properties:
 
 ```typescript
-const userFactory = Factory.define<User, Factories>(
-  ({ params }) => {
-    const { name = 'Bob Smith' } = params;
-    const email = params.email || `${kebabCase(name)}@example.com`;
+const userFactory = Factory.define<User, Factories>(({ params }) => {
+  const { name = 'Bob Smith' } = params;
+  const email = params.email || `${kebabCase(name)}@example.com`;
 
-    return {
-      name,
-      email,
-      posts: [],
-    };
-  },
-);
+  return {
+    name,
+    email,
+    posts: [],
+  };
+});
 ```
 
 ### Params that don't map to the result object (transient params)
@@ -237,7 +233,7 @@ const userFactory = Factory.define<User, Factories, UserTransientParams>(
         canPost: registered,
       },
     };
-  }
+  },
 );
 ```
 
@@ -252,10 +248,10 @@ precedence over the transient params:
 ```typescript
 const user = factories.user.build(
   { memberId: '1' },
-  { transient: { registered: true } }
+  { transient: { registered: true } },
 );
-user.memberId // '1'
-user.permissions.canPost  // true
+user.memberId; // '1'
+user.permissions.canPost; // true
 ```
 
 ### After-create hook
@@ -286,7 +282,7 @@ export default Factory.define<User, Factories>(
 See the [CONTRIBUTING] document.
 Thank you, [contributors]!
 
-[CONTRIBUTING]: CONTRIBUTING.md
+[contributing]: CONTRIBUTING.md
 [contributors]: https://github.com/thoughtbot/templates/graphs/contributors
 
 ## Credits
