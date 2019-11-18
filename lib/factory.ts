@@ -15,10 +15,7 @@ export class Factory<T, F = any, I = any> {
     return new Factory<T, F, I>(generator);
   }
 
-  build(
-    params: DeepPartial<T> = {},
-    options: BuildOptions<I> = { transient: {} },
-  ): T {
+  build(params: DeepPartial<T> = {}, options: BuildOptions<T, I> = {}): T {
     if (!this.factories) {
       throw new Error(
         'Factories have not been registered. Call `register` before using factories',
@@ -30,14 +27,14 @@ export class Factory<T, F = any, I = any> {
       this.factories,
       this.nextId++,
       params,
-      options.transient,
+      options,
     ).build();
   }
 
   buildList(
     number: number,
     params: DeepPartial<T> = {},
-    options: BuildOptions<I> = { transient: {} },
+    options: BuildOptions<T, I> = {},
   ): T[] {
     let list: T[] = [];
     for (let i = 0; i < number; i++) {

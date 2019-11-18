@@ -36,7 +36,9 @@ describe('associations', () => {
 
         afterCreate(user => {
           if (!skipPosts) {
-            user.posts.push(factories.post.build({}, { transient: { user } }));
+            user.posts.push(
+              factories.post.build({}, { associations: { user } }),
+            );
           }
         });
 
@@ -48,14 +50,12 @@ describe('associations', () => {
     );
 
     const postFactory = Factory.define<Post, Factories>(
-      ({ factories, transientParams, afterCreate }) => {
-        afterCreate(post => {
-          post.user.posts.push(post);
-        });
-
+      ({ factories, associations }) => {
         return {
           title: 'A Post',
-          user: transientParams.user || factories.user.build(),
+          user:
+            associations.user ||
+            factories.user.build({}, { transient: { skipPosts: true } }),
         };
       },
     );

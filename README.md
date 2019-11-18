@@ -2,15 +2,15 @@
 
 [![CircleCI](https://circleci.com/gh/thoughtbot/fishery.svg?style=svg)](https://circleci.com/gh/thoughtbot/fishery)
 
-**This project is still in early stages. Prior to a 1.0 release, its API is subject to change without notice.**
+Fishery is a library for setting up JavaScript objects for use in tests,
+Storybook, and anywhere else you need to set up data. It is loosely modeled
+after the Ruby gem, [factory_bot][factory_bot].
 
-Fishery is a library for setting up JavaScript objects for use in tests, Storybook, and anywhere else you need to set up data. It is modeled after the Ruby gem, [factory_bot][factory_bot].
-
-Fishery is built with TypeScript in mind. Factories return typed objects, so you can be confident that the data used in your tests is valid. If you aren't using TypeScript, that's fine too – Fishery still works, just without the extra typechecking that comes with TypeScript.
+Fishery is built with TypeScript in mind. Factories accept typed parameters and return typed objects, so you can be confident that the data used in your tests is valid. If you aren't using TypeScript, that's fine too – Fishery still works, just without the extra typechecking that comes with TypeScript.
 
 ## Installation
 
-First, install fishery with:
+Install fishery with:
 
 ```
 npm install --save fishery
@@ -24,7 +24,10 @@ yarn add fishery
 
 ## Usage
 
-It is recommended to define one factory per file and then combine them together to form a `factories` object which can then be used in tests, Storybook, etc.:
+A factory is just a function that returns your object. Fishery provides
+several arguments to your factory function to help with common situations.
+After defining your factory, you can then call `build()` on it to build your
+objects. Here's how it's done:
 
 ### Define factories
 
@@ -33,9 +36,11 @@ It is recommended to define one factory per file and then combine them together 
 import { Factory } from 'fishery';
 import { User } from '../my-types';
 
-export default Factory.define<User>(({ sequence }) => ({
+export default Factory.define<User>(({ sequence, factories }) => ({
   id: sequence,
   name: 'Bob',
+  address: { city: 'Grand Rapids', state: 'MI', country: 'USA' },
+  posts: factories.post.buildList(2)
 }));
 ```
 
@@ -55,20 +60,34 @@ export const factories = register({
 });
 ```
 
-### Use factories
+### Build objects with your factories
+
+Pass parameters as the first argument to `build` to override your factory defaults. These parameters are deep-merged into the default object returned by your factory.
+
+`build` also supports a seconds argument with the following keys:
+
+* `transient`: data for use in your factory that doesn't get overlaid onto your result object. More on this in the [Transient Params](#params-that-dont-map-to-the-result-object-transient-params) section
+* `associations`: often not required but can be useful in the case of bi-directional associations. More on this in the [Associations](#Associations) section
 
 ```typescript
 // my-test.test.ts
 import { factories } from './factories';
 
-const user = factories.user.build({ name: 'Susan' });
+const user = factories.user.build({
+  name: "Susan",
+  address: { city: "Detroit" }
+});
+
+user.name          // Susan
+user.address.city  // Detroit
+user.address.state // MI (from factory)
 ```
 
 ## Documentation
 
 ### Typechecking
 
-Factories are typed, so the following would cause TypeScript compile errors if using the factory defined above:
+Factories are fully typed, both when defining your factories and when using them to build objects, so you can be confident the data you are working with is correct.
 
 ```typescript
 const user = factories.user.build();
@@ -79,25 +98,65 @@ user.foo; // type error! Property 'foo' does not exist on type 'User'
 const user = factories.user.build({ foo: 'bar' }); // type error! Argument of type '{ foo: string; }' is not assignable to parameter of type 'Partial<User>'.
 ```
 
+```typescript
+export default Factory.define<User, Factories, UserTransientParams>(
+  ({ sequence, params, transientParams, associations, afterCreate }) => {
+    params.firstName    // Property 'firstName' does not exist on type 'DeepPartial<User>
+    transientParams.foo // Property 'foo' does not exist on type 'Partial<UserTransientParams>'
+    associations.bar    // Property 'bar' does not exist on type 'Partial<User>'
+
+    afterCreate(user => {
+      user.foo // Property 'foo' does not exist on type 'User'
+    })
+
+    return {
+      id: `user-${sequence}`,
+      name: 'Bob',
+      post: null,
+    };
+  },
+);
+```
+
 ### Associations
 
 If your factory references another factory, use the `factories` object
-provided by the generator function:
+provided to the factory:
 
 ```typescript
 const postFactory = Factory.define<Post, Factories>(
-  ({ factories, params }) => ({
+  ({ factories }) => ({
     title: 'My Blog Post',
     author: factories.user.build(),
   }),
 );
 ```
 
-In the above example, the `Factories` generic parameter is passed to
-`define`. This is optional but recommended in order to get type-checking of
-the `factories` object. You can define your `Factories` object like this:
+If you'd like to be able to pass in an association when building your object and short-circuit the call to `factories.xxx.build()`, use the `associations` variable provided to your factory:
 
 ```typescript
+const postFactory = Factory.define<Post, Factories>(
+  ({ factories, associations }) => ({
+    title: 'My Blog Post',
+    author: associations.author || factories.user.build(),
+  }),
+);
+```
+
+Then build your object like this:
+
+```typescript
+factories.post.build({}, { associations: { author: susan }})
+```
+
+#### Typing the `factories` factory argument
+
+In the above examples, the `Factories` generic parameter is passed to
+`define`. This is optional but recommended in order to get type-checking of
+the `factories` object. You can define your `Factories` type like this:
+
+```typescript
+// factories/types.ts
 export interface Factories {
   user: Factory<User>;
   post: Factory<Post>;
@@ -118,25 +177,27 @@ import { Factories } from './types';
 export const factories: Factories = register({ user, post });
 ```
 
-#### Use `params` to access passed in properties
+### Use `params` to access passed in properties
 
-In the above `postsfactory` example, the author property is calculated as `author: params.author || factories.user.build()`. The `params` object represents the properties bassed to the factory's `build` method. With this definition, if we create a post with `postsFactory.build({ author })`, then `factories.user.build()` is conveniently not executed. This can be handy in preventing infinite loops or expensive operations. 
-
-It is important to note that if the user factory has a call to `factories.post.build()` (without specifying the author), an infinite loop would still occur. The user factory would need to either not automatically create a post or pass itself as the author in an `afterCreate`, like:
+The parameters passed in to `build` are automatically overlaid on top of the
+default properties defined by your factory, so it is often not necessary to
+explicitly access the params in your factory. This can, however, be useful,
+for example, if your factory uses the params to compute other properties:
 
 ```typescript
 const userFactory = Factory.define<User, Factories>(
-  ({ factories, afterCreate }) => {
-    afterCreate(user => user.posts.push(factories.post.build({ author: user })));
+  ({ params }) => {
+    const { name = 'Bob Smith' } = params;
+    const email = params.email || `${kebabCase(name)}@example.com`;
+
     return {
-      name: 'Bob',
+      name,
+      email,
       posts: [],
     };
   },
 );
 ```
-
-In normal situations, you should not have to access `params` directly. The properties passed in to `build` are automatically overlaid on top of the default properties defined by the factory.
 
 ### Params that don't map to the result object (transient params)
 
@@ -148,7 +209,7 @@ params in the second argument:
 const user = factories.user.build({}, { transient: { registered: true } });
 ```
 
-Transient params are passed in to your factory function and can then be used
+Transient params are passed in to your factory and can then be used
 however you like:
 
 ```typescript
@@ -199,22 +260,25 @@ user.permissions.canPost  // true
 
 ### After-create hook
 
-You can instruct factories to execute some code after an object is created. This can be useful if a reference to the object is needed, eg. when setting up relationships:
+You can instruct factories to execute some code after an object is created.
+This can be useful if a reference to the object is needed, like when setting
+up relationships:
 
 ```typescript
-export default Factory.define<User, Factories>(({ factories, sequence, afterCreate }) => {
-  afterCreate(user => {
-    if(user.posts.length === 0) {
-      user.posts.push(factories.post.build({ author: user })
-    }
-  });
+export default Factory.define<User, Factories>(
+  ({ factories, sequence, afterCreate }) => {
+    afterCreate(user => {
+      const post = factories.post.build({}, { associations: { author: user } });
+      user.posts.push(post);
+    });
 
-  return {
-    id: sequence,
-    name: 'Bob',
-    posts: []
-  };
-});
+    return {
+      id: sequence,
+      name: 'Bob',
+      posts: [],
+    };
+  },
+);
 ```
 
 ## Contributing
