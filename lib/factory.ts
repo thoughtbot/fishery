@@ -1,4 +1,4 @@
-import { GeneratorFn, BuildOptions } from './types';
+import { DeepPartial, GeneratorFn, BuildOptions } from './types';
 import { FactoryBuilder } from './builder';
 
 export interface AnyFactories {
@@ -6,8 +6,8 @@ export interface AnyFactories {
 }
 
 export class Factory<T, F = any, I = any> {
-  nextId: number = 0;
-  factories?: F;
+  private nextId: number = 0;
+  private factories?: F;
 
   constructor(private generator: GeneratorFn<T, F, I>) {}
 
@@ -15,10 +15,7 @@ export class Factory<T, F = any, I = any> {
     return new Factory<T, F, I>(generator);
   }
 
-  build(
-    params: Partial<T> = {},
-    options: BuildOptions<I> = { transient: {} },
-  ): T {
+  build(params: DeepPartial<T> = {}, options: BuildOptions<T, I> = {}): T {
     if (!this.factories) {
       throw new Error(
         'Factories have not been registered. Call `register` before using factories',
@@ -30,14 +27,14 @@ export class Factory<T, F = any, I = any> {
       this.factories,
       this.nextId++,
       params,
-      options.transient,
+      options,
     ).build();
   }
 
   buildList(
     number: number,
-    params: Partial<T> = {},
-    options: BuildOptions<I> = { transient: {} },
+    params: DeepPartial<T> = {},
+    options: BuildOptions<T, I> = {},
   ): T[] {
     let list: T[] = [];
     for (let i = 0; i < number; i++) {
@@ -45,5 +42,9 @@ export class Factory<T, F = any, I = any> {
     }
 
     return list;
+  }
+
+  setFactories(factories: F) {
+    this.factories = factories;
   }
 }

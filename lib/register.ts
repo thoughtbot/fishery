@@ -6,7 +6,7 @@ import { AnyFactories } from './factory';
 export const register = <T extends object>(allFactories: T) => {
   const factories = allFactories as AnyFactories;
   Object.keys(factories).forEach((key: string) => {
-    factories[key].factories = factories;
+    factories[key].setFactories(factories);
   });
 
   return allFactories;
