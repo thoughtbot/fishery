@@ -277,6 +277,39 @@ export default Factory.define<User, Factories>(
 );
 ```
 
+### Defining one-off factories without calling `register`
+
+Factories should usually be defined and then combined together using `register`:
+
+```typescript
+// factories/index.ts
+import { register } from 'fishery';
+import user from './user';
+import post from './post';
+import { Factories } from './types';
+
+export const factories: Factories = register({ user, post });
+```
+
+The factories passed to register get injected into each factory so factories can
+access each other. This prevents circular dependencies that could arise if your
+factories try to access other factories directly by importing them and also
+creates a convenient way for factories to access other factories without having
+to explicitly import them.
+
+If you are defining a factory for use in a single test file, you might not wish
+to register the factory or use the `factories` object that gets injected to the
+factory. In this case, you can use `defineUnregistered` instead of `define` and
+then skip calling `register`, eg:
+
+```typescript
+const personFactory = Factory.defineUnregistered<Person>(() => ({
+  name: 'Sasha',
+}));
+
+const person = personFactory.build();
+```
+
 ## Contributing
 
 See the [CONTRIBUTING] document.
