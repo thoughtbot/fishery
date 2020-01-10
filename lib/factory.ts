@@ -7,7 +7,10 @@ export interface AnyFactories {
 
 export class Factory<T, F = any, I = any> {
   private nextId: number = 0;
-  private factories?: F;
+
+  // default to proxy object that raises a useful error if user attempts to access
+  // 'factories' in their factory without first registering their factory
+  private factories: F = (uninitializedFactories as unknown) as F;
 
   constructor(private generator: GeneratorFn<T, F, I>) {}
 
@@ -16,12 +19,6 @@ export class Factory<T, F = any, I = any> {
   }
 
   build(params: DeepPartial<T> = {}, options: BuildOptions<T, I> = {}): T {
-    if (!this.factories) {
-      throw new Error(
-        'Factories have not been registered. Call `register` before using factories',
-      );
-    }
-
     return new FactoryBuilder<T, F, I>(
       this.generator,
       this.factories,
@@ -48,3 +45,18 @@ export class Factory<T, F = any, I = any> {
     this.factories = factories;
   }
 }
+
+// proxy object that raises a useful error if user tries to use `factories`
+// without first registering their factory
+const uninitializedFactories = new Proxy(
+  {},
+  {
+    get: (_obj, prop) => {
+      throw new Error(
+        `Attempted to call 'factories.${String(
+          prop,
+        )}', but 'factories' is undefined. Register your factories with 'register' before use if using the 'factories' argument`,
+      );
+    },
+  },
+);
