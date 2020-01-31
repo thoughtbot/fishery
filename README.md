@@ -6,7 +6,10 @@ Fishery is a library for setting up JavaScript objects for use in tests,
 Storybook, and anywhere else you need to set up data. It is loosely modeled
 after the Ruby gem, [factory_bot][factory_bot].
 
-Fishery is built with TypeScript in mind. Factories accept typed parameters and return typed objects, so you can be confident that the data used in your tests is valid. If you aren't using TypeScript, that's fine too – Fishery still works, just without the extra typechecking that comes with TypeScript.
+Fishery is built with TypeScript in mind. Factories accept typed parameters and
+return typed objects, so you can be confident that the data used in your tests
+is valid. If you aren't using TypeScript, that's fine too – Fishery still works,
+just without the extra typechecking that comes with TypeScript.
 
 ## Installation
 
@@ -62,12 +65,18 @@ export const factories = register({
 
 ### Build objects with your factories
 
-Pass parameters as the first argument to `build` to override your factory defaults. These parameters are deep-merged into the default object returned by your factory.
+Pass parameters as the first argument to `build` to override your factory
+defaults. These parameters are deep-merged into the default object returned by
+your factory.
 
 `build` also supports a seconds argument with the following keys:
 
-- `transient`: data for use in your factory that doesn't get overlaid onto your result object. More on this in the [Transient Params](#params-that-dont-map-to-the-result-object-transient-params) section
-- `associations`: often not required but can be useful in the case of bi-directional associations. More on this in the [Associations](#Associations) section
+- `transient`: data for use in your factory that doesn't get overlaid onto your
+  result object. More on this in the [Transient
+  Params](#params-that-dont-map-to-the-result-object-transient-params) section
+- `associations`: often not required but can be useful in the case of
+  bi-directional associations. More on this in the [Associations](#Associations)
+  section
 
 ```typescript
 // my-test.test.ts
@@ -87,7 +96,9 @@ user.address.state; // MI (from factory)
 
 ### Typechecking
 
-Factories are fully typed, both when defining your factories and when using them to build objects, so you can be confident the data you are working with is correct.
+Factories are fully typed, both when defining your factories and when using them
+to build objects, so you can be confident the data you are working with is
+correct.
 
 ```typescript
 const user = factories.user.build();
@@ -130,7 +141,9 @@ const postFactory = Factory.define<Post, Factories>(({ factories }) => ({
 }));
 ```
 
-If you'd like to be able to pass in an association when building your object and short-circuit the call to `factories.xxx.build()`, use the `associations` variable provided to your factory:
+If you'd like to be able to pass in an association when building your object and
+short-circuit the call to `factories.xxx.build()`, use the `associations`
+variable provided to your factory:
 
 ```typescript
 const postFactory = Factory.define<Post, Factories>(
@@ -320,11 +333,13 @@ Thank you, [contributors]!
 
 ## Credits
 
-This project name was inspired by Patrick Rothfuss' _Kingkiller Chronicles_ books. In the books, the artificery, or workshop, is called the Fishery for short.
+This project name was inspired by Patrick Rothfuss' _Kingkiller Chronicles_
+books. In the books, the artificery, or workshop, is called the Fishery for
+short. The Fishery is where things are built.
 
 ## License
 
-Fishery is Copyright © 2019 Stephen Hanson and thoughtbot. It is free
+Fishery is Copyright © 2020 Stephen Hanson and thoughtbot. It is free
 software, and may be redistributed under the terms specified in the
 [LICENSE](/LICENSE) file.
 
