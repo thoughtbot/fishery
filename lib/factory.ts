@@ -11,14 +11,37 @@ export class Factory<T, F = any, I = any> {
 
   constructor(private generator: GeneratorFn<T, F, I>) {}
 
+  /**
+   * Define a factory. This factory needs to be registered with
+   * `register` before use.
+   * @param generator - your factory function
+   */
   static define<T, F = any, I = any>(generator: GeneratorFn<T, F, I>) {
     return new Factory<T, F, I>(generator);
   }
 
+  /**
+   * Define a factory that does not need to be registered with `register`. The
+   * factory will not have access the `factories` parameter. This can be useful
+   * for one-off factories in individual tests
+   * @param generator - your factory
+   * function
+   */
+  static defineUnregistered<T, I = any>(generator: GeneratorFn<T, null, I>) {
+    const factory = new Factory<T, null, I>(generator);
+    factory.setFactories(null);
+    return factory;
+  }
+
+  /**
+   * Build an object using your factory
+   * @param params
+   * @param options
+   */
   build(params: DeepPartial<T> = {}, options: BuildOptions<T, I> = {}): T {
-    if (!this.factories) {
+    if (typeof this.factories === 'undefined') {
       throw new Error(
-        'Factories have not been registered. Call `register` before using factories',
+        'Your factory has not been registered. Call `register` before using factories or define your factory with `defineUnregistered` instead of `define`',
       );
     }
 
