@@ -329,7 +329,7 @@ See the [CONTRIBUTING] document.
 Thank you, [contributors]!
 
 [contributing]: CONTRIBUTING.md
-[contributors]: https://github.com/thoughtbot/templates/graphs/contributors
+[contributors]: https://github.com/thoughtbot/fishery/graphs/contributors
 
 ## Credits
 
