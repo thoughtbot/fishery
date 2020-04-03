@@ -8,7 +8,8 @@ import {
 import merge from 'lodash.merge';
 
 export class FactoryBuilder<T, F, I> {
-  private afterCreate?: HookFn<T>;
+  private afterBuildHook?: HookFn<T>;
+  private onCreateHook?: HookFn<T>;
   private transientParams: Partial<I>;
   private associations: Partial<T>;
 
@@ -26,7 +27,8 @@ export class FactoryBuilder<T, F, I> {
   build() {
     const generatorOptions: GeneratorFnOptions<T, F, I> = {
       sequence: this.sequence,
-      afterCreate: this.setAfterCreate,
+      onCreate: this.setOnCreateHook,
+      afterBuild: this.setAfterBuildHook,
       factories: this.factories,
       params: this.params,
       associations: this.associations,
@@ -40,21 +42,44 @@ export class FactoryBuilder<T, F, I> {
     // vs DeepPartial<T>) so can do the following in a factory:
     // `user: associations.user || factories.user.build()`
     merge(object, this.params, this.associations);
-    this._callAfterCreate(object);
+    this._callAfterBuildHook(object);
     return object;
   }
 
-  setAfterCreate = (hook: HookFn<T>) => {
-    this.afterCreate = hook;
+  async create() {
+    const object = this.build();
+    return this._callOnCreateHook(object);
+  }
+
+  setOnCreateHook = (hook: HookFn<T>) => {
+    this.onCreateHook = hook;
   };
 
-  _callAfterCreate(object: T) {
-    if (this.afterCreate) {
-      if (typeof this.afterCreate === 'function') {
-        this.afterCreate(object);
+  setAfterBuildHook = (hook: HookFn<T>) => {
+    this.afterBuildHook = hook;
+  };
+
+  _callAfterBuildHook(object: T) {
+    if (this.afterBuildHook) {
+      if (typeof this.afterBuildHook === 'function') {
+        this.afterBuildHook(object);
       } else {
-        throw new Error('"afterCreate" must be a function');
+        throw new Error('"afterBuild" must be a function');
       }
+    }
+  }
+
+  _callOnCreateHook(object: T) {
+    if (this.onCreateHook) {
+      if (typeof this.onCreateHook === 'function') {
+        return this.onCreateHook(object);
+      } else {
+        throw new Error('"onCreate" must be a function');
+      }
+    } else {
+      throw new Error(
+        'Tried to call `create` but `onCreate` function is not defined for the factory. Define this function when calling `factory.define`',
+      );
     }
   }
 }

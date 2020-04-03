@@ -111,12 +111,12 @@ const user = factories.user.build({ foo: 'bar' }); // type error! Argument of ty
 
 ```typescript
 export default Factory.define<User, Factories, UserTransientParams>(
-  ({ sequence, params, transientParams, associations, afterCreate }) => {
+  ({ sequence, params, transientParams, associations, afterBuild }) => {
     params.firstName; // Property 'firstName' does not exist on type 'DeepPartial<User>
     transientParams.foo; // Property 'foo' does not exist on type 'Partial<UserTransientParams>'
     associations.bar; // Property 'bar' does not exist on type 'Partial<User>'
 
-    afterCreate(user => {
+    afterBuild(user => {
       user.foo; // Property 'foo' does not exist on type 'User'
     });
 
@@ -267,16 +267,16 @@ user.memberId; // '1'
 user.permissions.canPost; // true
 ```
 
-### After-create hook
+### After-build hook
 
-You can instruct factories to execute some code after an object is created.
+You can instruct factories to execute some code after an object is built.
 This can be useful if a reference to the object is needed, like when setting
 up relationships:
 
 ```typescript
 export default Factory.define<User, Factories>(
-  ({ factories, sequence, afterCreate }) => {
-    afterCreate(user => {
+  ({ factories, sequence, afterBuild }) => {
+    afterBuild(user => {
       const post = factories.post.build({}, { associations: { author: user } });
       user.posts.push(post);
     });

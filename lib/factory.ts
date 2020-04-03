@@ -40,9 +40,7 @@ export class Factory<T, F = any, I = any> {
    */
   build(params: DeepPartial<T> = {}, options: BuildOptions<T, I> = {}): T {
     if (typeof this.factories === 'undefined') {
-      throw new Error(
-        'Your factory has not been registered. Call `register` before using factories or define your factory with `defineUnregistered` instead of `define`',
-      );
+      this._throwFactoriesUndefined();
     }
 
     return new FactoryBuilder<T, F, I>(
@@ -67,7 +65,49 @@ export class Factory<T, F = any, I = any> {
     return list;
   }
 
+  /**
+   * Asynchronously create an object using your factory. Relies on the `create`
+   * function defined in the factory
+   * @param params
+   * @param options
+   */
+  create(
+    params: DeepPartial<T> = {},
+    options: BuildOptions<T, I> = {},
+  ): Promise<T> {
+    if (typeof this.factories === 'undefined') {
+      this._throwFactoriesUndefined();
+    }
+
+    return new FactoryBuilder<T, F, I>(
+      this.generator,
+      this.factories,
+      this.nextId++,
+      params,
+      options,
+    ).create();
+  }
+
+  createList(
+    number: number,
+    params: DeepPartial<T> = {},
+    options: BuildOptions<T, I> = {},
+  ): Promise<T[]> {
+    let promises: Promise<T>[] = [];
+    for (let i = 0; i < number; i++) {
+      promises.push(this.create(params, options));
+    }
+
+    return Promise.all(promises);
+  }
+
   setFactories(factories: F) {
     this.factories = factories;
+  }
+
+  _throwFactoriesUndefined(): never {
+    throw new Error(
+      'Your factory has not been registered. Call `register` before using factories or define your factory with `defineUnregistered` instead of `define`',
+    );
   }
 }

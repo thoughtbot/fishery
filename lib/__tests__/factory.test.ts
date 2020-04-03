@@ -42,26 +42,55 @@ describe('factory.buildList', () => {
     expect(users.map(u => u.name)).toEqual(['susan', 'susan']);
   });
 
-  it('calls afterCreate for each item', () => {
-    const afterCreateFn = jest.fn(user => {
+  it('calls afterBuild for each item', () => {
+    const afterBuildFn = jest.fn(user => {
       user.name = 'Bill';
     });
 
-    const factory = Factory.define<User>(({ afterCreate }) => {
-      afterCreate(afterCreateFn);
+    const factory = Factory.define<User>(({ afterBuild }) => {
+      afterBuild(afterBuildFn);
       return { id: '1', name: 'Ralph' };
     });
 
     register({ user: factory });
     expect(factory.buildList(2).every(u => u.name === 'Bill')).toBeTruthy();
-    expect(afterCreateFn).toHaveBeenCalledTimes(2);
+    expect(afterBuildFn).toHaveBeenCalledTimes(2);
   });
 });
 
-describe('afterCreate', () => {
+describe('factory.create', () => {
+  it('creates the object and returns a promise as defined in factory `onCreate` method', async () => {
+    expect.assertions(1);
+    type User = { name: string };
+    const userFactory = Factory.defineUnregistered<User>(({ onCreate }) => {
+      onCreate(user => {
+        user.name = 'Susan';
+        return Promise.resolve(user);
+      });
+
+      return { name: 'Bob' };
+    });
+    const user = await userFactory.create();
+    expect(user.name).toEqual('Susan');
+  });
+
+  it('raises an error if create is not defined', async () => {
+    expect.assertions(1);
+    type User = { name: string };
+    const userFactory = Factory.defineUnregistered<User>(() => ({
+      name: 'Bob',
+    }));
+
+    await userFactory.create().catch(err => {
+      expect(err.message).toMatch(/Tried to call `create`/);
+    });
+  });
+});
+
+describe('afterBuild', () => {
   it('passes the object for manipulation', () => {
-    const factory = Factory.define<User>(({ afterCreate }) => {
-      afterCreate(user => {
+    const factory = Factory.define<User>(({ afterBuild }) => {
+      afterBuild(user => {
         user.id = 'bla';
       });
 
@@ -74,8 +103,8 @@ describe('afterCreate', () => {
 
   describe('when not a function', () => {
     it('raises an error', () => {
-      const factory = Factory.define<User>(({ afterCreate }) => {
-        afterCreate(('5' as unknown) as HookFn<User>);
+      const factory = Factory.define<User>(({ afterBuild }) => {
+        afterBuild(('5' as unknown) as HookFn<User>);
         return { id: '1', name: 'Ralph' };
       });
 
