@@ -11,8 +11,10 @@ export interface AnyFactories {
   [key: string]: Factory<any>;
 }
 
+const SEQUENCE_START_VALUE: number = 0;
+
 export class Factory<T, F = any, I = any> {
-  private nextId: number = 0;
+  private nextId: number = SEQUENCE_START_VALUE;
   private factories?: F;
   private _afterCreates: HookFn<T>[] = [];
   private _associations: Partial<T> = {};
@@ -129,6 +131,13 @@ export class Factory<T, F = any, I = any> {
     const factory = this.clone();
     factory._transient = { ...this._transient, ...transient };
     return factory;
+  }
+
+  /**
+   * Sets sequence back to its default value
+   */
+  rewindSequence() {
+    this.nextId = SEQUENCE_START_VALUE;
   }
 
   setFactories(factories: F) {

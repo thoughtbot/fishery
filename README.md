@@ -411,6 +411,33 @@ const personFactory = Factory.defineUnregistered<Person>(() => ({
 const person = personFactory.build();
 ```
 
+### Rewind Sequence
+
+A factory's sequence can be rewound with `rewindSequence()`.
+This sets the sequence back to its original starting value.
+
+Given the following factory
+
+```typescript
+export default Factory.define<User>(({ sequence }) => ({
+  email: `person${sequence}@example.com`,
+}));
+```
+
+You can rewind a factory's sequence at your discretion
+
+```typescript
+import { factories } from './factories';
+
+factories.user.build(); // { email: 'person0@example.com' }
+factories.user.build(); // { email: 'person1@example.com' }
+factories.user.build(); // { email: 'person2@example.com' }
+
+factories.user.rewindSequence();
+
+factories.user.build(); // { email: 'person0@example.com' }
+```
+
 ## Contributing
 
 See the [CONTRIBUTING] document.
