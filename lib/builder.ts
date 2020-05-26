@@ -1,27 +1,17 @@
-import {
-  GeneratorFn,
-  HookFn,
-  GeneratorFnOptions,
-  DeepPartial,
-  BuildOptions,
-} from './types';
+import { GeneratorFn, HookFn, GeneratorFnOptions, DeepPartial } from './types';
 import merge from 'lodash.merge';
 
 export class FactoryBuilder<T, F, I> {
   private afterCreate?: HookFn<T>;
-  private transientParams: Partial<I>;
-  private associations: Partial<T>;
 
   constructor(
     private generator: GeneratorFn<T, F, I>,
     private factories: F,
     private sequence: number,
     private params: DeepPartial<T>,
-    options: BuildOptions<T, I>,
-  ) {
-    this.transientParams = options.transient || {};
-    this.associations = options.associations || {};
-  }
+    private transientParams: Partial<I>,
+    private associations: Partial<T>,
+  ) {}
 
   build() {
     const generatorOptions: GeneratorFnOptions<T, F, I> = {

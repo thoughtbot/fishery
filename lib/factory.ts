@@ -14,6 +14,7 @@ export class Factory<T, F = any, I = any> {
   private nextId: number = 0;
   private factories?: F;
   private _params: DeepPartial<T> = {};
+  private _transient: Partial<I> = {};
 
   constructor(
     private readonly generator: (opts: GeneratorFnOptions<T, F, I>) => T,
@@ -64,7 +65,8 @@ export class Factory<T, F = any, I = any> {
       this.factories,
       this.sequence(),
       { ...this._params, ...params },
-      options,
+      { ...this._transient, ...options.transient },
+      options.associations || {},
     ).build();
   }
 
@@ -84,6 +86,12 @@ export class Factory<T, F = any, I = any> {
   params(params: Partial<T>): this {
     const factory = this.clone();
     factory._params = { ...this._params, ...params };
+    return factory;
+  }
+
+  transient(transient: Partial<I>): this {
+    const factory = this.clone();
+    factory._transient = { ...this._transient, ...transient };
     return factory;
   }
 
