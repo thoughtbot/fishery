@@ -1,6 +1,7 @@
 import { register, Factory } from 'fishery';
 
-export interface User {
+type Post = { id: string };
+type User = {
   id: string;
   firstName: string;
   lastName: string;
@@ -8,7 +9,10 @@ export interface User {
   adminId: string | null;
   registered: boolean;
   memberId: string | null;
-}
+  post: Post;
+};
+
+const postFactory = Factory.define<Post>(() => ({ id: '1' }));
 
 type TransientParams = { registered: boolean };
 class UserFactory extends Factory<User, any, TransientParams> {
@@ -24,7 +28,7 @@ class UserFactory extends Factory<User, any, TransientParams> {
   }
 }
 
-const userFactory = UserFactory.define(({ transientParams }) => {
+const userFactory = UserFactory.define(({ associations, transientParams }) => {
   const { registered = false } = transientParams;
   const memberId = registered ? '1' : null;
 
@@ -36,10 +40,11 @@ const userFactory = UserFactory.define(({ transientParams }) => {
     lastName: 'Sanchez',
     registered,
     memberId,
+    post: associations.post || postFactory.build(),
   };
 });
 
-register({ user: userFactory });
+register({ user: userFactory, post: postFactory });
 
 describe('afterCreate', () => {
   it('defines a function that is called after build', () => {
@@ -91,6 +96,18 @@ describe('afterCreate', () => {
     expect(user.id).toEqual('builder');
     expect(afterCreateGenerator).toHaveBeenCalledTimes(1);
     expect(afterCreateBuilder).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('associations', () => {
+  it('adds associations that are then used for build', () => {
+    const user = userFactory.associations({ post: { id: '2' } }).build();
+    expect(user.post.id).toEqual('2');
+  });
+
+  it('does not persist the associations to the factory', () => {
+    userFactory.associations({ post: { id: '2' } });
+    expect(userFactory.build().post.id).toEqual('1');
   });
 });
 

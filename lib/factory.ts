@@ -15,6 +15,7 @@ export class Factory<T, F = any, I = any> {
   private nextId: number = 0;
   private factories?: F;
   private _afterCreates: HookFn<T>[] = [];
+  private _associations: Partial<T> = {};
   private _params: DeepPartial<T> = {};
   private _transient: Partial<I> = {};
 
@@ -68,7 +69,7 @@ export class Factory<T, F = any, I = any> {
       this.sequence(),
       { ...this._params, ...params },
       { ...this._transient, ...options.transient },
-      options.associations || {},
+      { ...this._associations, ...options.associations },
       this._afterCreates,
     ).build();
   }
@@ -92,7 +93,13 @@ export class Factory<T, F = any, I = any> {
     return factory;
   }
 
-  params(params: Partial<T>): this {
+  associations(associations: Partial<T>): this {
+    const factory = this.clone();
+    factory._associations = { ...this._associations, ...associations };
+    return factory;
+  }
+
+  params(params: DeepPartial<T>): this {
     const factory = this.clone();
     factory._params = { ...this._params, ...params };
     return factory;
