@@ -41,6 +41,59 @@ const userFactory = UserFactory.define(({ transientParams }) => {
 
 register({ user: userFactory });
 
+describe('afterCreate', () => {
+  it('defines a function that is called after build', () => {
+    const afterCreate = jest.fn(user => {
+      user.id = '123';
+      return user;
+    });
+    const user = userFactory.afterCreate(afterCreate).build();
+    expect(user.id).toEqual('123');
+    expect(afterCreate).toHaveBeenCalledWith(user);
+  });
+
+  it('calls chained or inherited afterCreates sequentially', () => {
+    const afterCreate1 = jest.fn(user => {
+      user.id = 'a';
+      return user;
+    });
+    const afterCreate2 = jest.fn(user => {
+      user.id = 'b';
+      return user;
+    });
+
+    const user = userFactory
+      .afterCreate(afterCreate1)
+      .afterCreate(afterCreate2)
+      .build();
+    expect(user.id).toEqual('b');
+    expect(afterCreate1).toHaveBeenCalledTimes(1);
+    expect(afterCreate2).toHaveBeenCalledTimes(1);
+  });
+
+  it('calls afterCreate from the generator function before those later defined by builder', () => {
+    const afterCreateGenerator = jest.fn(user => {
+      user.id = 'generator';
+      return user;
+    });
+    const afterCreateBuilder = jest.fn(user => {
+      user.id = 'builder';
+      return user;
+    });
+
+    type User = { id: string };
+    const userFactory = Factory.defineUnregistered<User>(({ afterCreate }) => {
+      afterCreate(afterCreateGenerator);
+      return { id: '1' };
+    });
+
+    const user = userFactory.afterCreate(afterCreateBuilder).build();
+    expect(user.id).toEqual('builder');
+    expect(afterCreateGenerator).toHaveBeenCalledTimes(1);
+    expect(afterCreateBuilder).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('params', () => {
   it('adds parameters that are then used for build', () => {
     const user = userFactory.params({ admin: true }).build();

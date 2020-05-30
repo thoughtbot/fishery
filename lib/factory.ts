@@ -3,6 +3,7 @@ import {
   GeneratorFn,
   BuildOptions,
   GeneratorFnOptions,
+  HookFn,
 } from './types';
 import { FactoryBuilder } from './builder';
 
@@ -13,6 +14,7 @@ export interface AnyFactories {
 export class Factory<T, F = any, I = any> {
   private nextId: number = 0;
   private factories?: F;
+  private _afterCreates: HookFn<T>[] = [];
   private _params: DeepPartial<T> = {};
   private _transient: Partial<I> = {};
 
@@ -67,6 +69,7 @@ export class Factory<T, F = any, I = any> {
       { ...this._params, ...params },
       { ...this._transient, ...options.transient },
       options.associations || {},
+      this._afterCreates,
     ).build();
   }
 
@@ -81,6 +84,12 @@ export class Factory<T, F = any, I = any> {
     }
 
     return list;
+  }
+
+  afterCreate(afterCreateFn: HookFn<T>): this {
+    const factory = this.clone();
+    factory._afterCreates.push(afterCreateFn);
+    return factory;
   }
 
   params(params: Partial<T>): this {
