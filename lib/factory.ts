@@ -87,24 +87,44 @@ export class Factory<T, F = any, I = any> {
     return list;
   }
 
+  /**
+   * Extend the factory by adding a function to be called after an object is built.
+   * @param afterCreateFn - the function to call. It accepts your object of type T. The value this function returns gets returned from "build"
+   * @returns a new factory
+   */
   afterCreate(afterCreateFn: HookFn<T>): this {
     const factory = this.clone();
     factory._afterCreates.push(afterCreateFn);
     return factory;
   }
 
+  /**
+   * Extend the factory by adding default associations to be passed to the factory when "build" is called
+   * @param associations
+   * @returns a new factory
+   */
   associations(associations: Partial<T>): this {
     const factory = this.clone();
     factory._associations = { ...this._associations, ...associations };
     return factory;
   }
 
+  /**
+   * Extend the factory by adding default parameters to be passed to the factory when "build" is called
+   * @param params
+   * @returns a new factory
+   */
   params(params: DeepPartial<T>): this {
     const factory = this.clone();
     factory._params = { ...this._params, ...params };
     return factory;
   }
 
+  /**
+   * Extend the factory by adding default transient parameters to be passed to the factory when "build" is called
+   * @param transient - transient params
+   * @returns a new factory
+   */
   transient(transient: Partial<I>): this {
     const factory = this.clone();
     factory._transient = { ...this._transient, ...transient };
