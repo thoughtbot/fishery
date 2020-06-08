@@ -1,7 +1,7 @@
 import { Factory } from 'fishery';
-import { User, Factories } from '../types';
+import { User } from '../types';
 
-export default Factory.define<User, Factories>(({ sequence }) => {
+export default Factory.define<User>(({ sequence }) => {
   return {
     id: `user-${sequence}`,
     name: 'Bob',

@@ -1,4 +1,4 @@
-import { Factory, HookFn, register } from 'fishery';
+import { Factory } from 'fishery';
 
 describe('Transient params', () => {
   interface User {
@@ -14,7 +14,7 @@ describe('Transient params', () => {
     name: string;
   }
 
-  const userFactory = Factory.define<User, any, UserTransientParams>(
+  const userFactory = Factory.define<User, UserTransientParams>(
     ({ transientParams }) => {
       const {
         name = 'Sharon Jones',
@@ -37,9 +37,9 @@ describe('Transient params', () => {
     },
   );
 
-  const factories = register({
+  const factories = {
     user: userFactory,
-  });
+  };
 
   it('uses default when no transient param passed', () => {
     const user = factories.user.build();

@@ -1,4 +1,4 @@
-import { register, Factory, HookFn } from 'fishery';
+import { Factory, HookFn } from 'fishery';
 
 type User = {
   id: string;
@@ -17,8 +17,6 @@ const userFactory = Factory.define<User>(({ sequence }) => {
     },
   };
 });
-
-register({ user: userFactory });
 
 describe('factory.build', () => {
   it('builds the object', () => {
@@ -52,7 +50,6 @@ describe('factory.buildList', () => {
       return { id: '1', name: 'Ralph' };
     });
 
-    register({ user: factory });
     expect(factory.buildList(2).every(u => u.name === 'Bill')).toBeTruthy();
     expect(afterBuildFn).toHaveBeenCalledTimes(2);
   });
@@ -68,7 +65,6 @@ describe('afterBuild', () => {
       return { id: '1', name: 'Ralph' };
     });
 
-    register({ user: factory });
     expect(factory.build().id).toEqual('bla');
   });
 
@@ -79,7 +75,6 @@ describe('afterBuild', () => {
         return { id: '1', name: 'Ralph' };
       });
 
-      register({ user: factory });
       expect(() => {
         factory.build();
       }).toThrowError(/must be a function/);
@@ -93,8 +88,6 @@ describe('factory.rewindSequence', () => {
       return { id: `user-${sequence}`, name: 'Ralph' };
     });
 
-    register({ user: factory });
-
     expect(factory.build().id).toBe('user-1');
 
     factory.rewindSequence();
@@ -106,8 +99,6 @@ describe('factory.rewindSequence', () => {
     const factory = Factory.define<User>(({ sequence }) => {
       return { id: `user-${sequence}`, name: 'Ralph' };
     });
-
-    register({ user: factory });
 
     expect(factory.buildList(2)).toEqual([
       { id: 'user-1', name: 'Ralph' },

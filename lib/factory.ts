@@ -7,50 +7,31 @@ import {
 } from './types';
 import { FactoryBuilder } from './builder';
 
-export interface AnyFactories {
-  [key: string]: Factory<any>;
-}
-
 const SEQUENCE_START_VALUE = 1;
 
-export class Factory<T, F = any, I = any> {
+export class Factory<T, I = any> {
   private nextId: number = SEQUENCE_START_VALUE;
-  private factories?: F;
   private _afterBuilds: HookFn<T>[] = [];
   private _associations: Partial<T> = {};
   private _params: DeepPartial<T> = {};
   private _transient: Partial<I> = {};
 
   constructor(
-    private readonly generator: (opts: GeneratorFnOptions<T, F, I>) => T,
+    private readonly generator: (opts: GeneratorFnOptions<T, I>) => T,
   ) {}
 
   /**
    * Define a factory. This factory needs to be registered with
    * `register` before use.
    * @template T The object the factory builds
-   * @template F The `factories` object
    * @template I The transient parameters that your factory supports
    * @param generator - your factory function
    */
-  static define<T, F = any, I = any, C = Factory<T, F, I>>(
-    this: new (generator: GeneratorFn<T, F, I>) => C,
-    generator: GeneratorFn<T, F, I>,
+  static define<T, I = any, C = Factory<T, I>>(
+    this: new (generator: GeneratorFn<T, I>) => C,
+    generator: GeneratorFn<T, I>,
   ): C {
     return new this(generator);
-  }
-
-  /**
-   * Define a factory that does not need to be registered with `register`. The
-   * factory will not have access the `factories` parameter. This can be useful
-   * for one-off factories in individual tests
-   * @param generator - your factory
-   * function
-   */
-  static defineUnregistered<T, I = any>(generator: GeneratorFn<T, null, I>) {
-    const factory = new Factory<T, null, I>(generator);
-    factory.setFactories(null);
-    return factory;
   }
 
   /**
@@ -59,15 +40,8 @@ export class Factory<T, F = any, I = any> {
    * @param options
    */
   build(params: DeepPartial<T> = {}, options: BuildOptions<T, I> = {}): T {
-    if (typeof this.factories === 'undefined') {
-      throw new Error(
-        'Your factory has not been registered. Call `register` before using factories or define your factory with `defineUnregistered` instead of `define`',
-      );
-    }
-
-    return new FactoryBuilder<T, F, I>(
+    return new FactoryBuilder<T, I>(
       this.generator,
-      this.factories,
       this.sequence(),
       { ...this._params, ...params },
       { ...this._transient, ...options.transient },
@@ -140,13 +114,9 @@ export class Factory<T, F = any, I = any> {
     this.nextId = SEQUENCE_START_VALUE;
   }
 
-  setFactories(factories: F) {
-    this.factories = factories;
-  }
-
-  protected clone<C extends Factory<T, F, I>>(this: C): C {
+  protected clone<C extends Factory<T, I>>(this: C): C {
     const copy = new (this.constructor as {
-      new (generator: GeneratorFn<T, F, I>): C;
+      new (generator: GeneratorFn<T, I>): C;
     })(this.generator);
     Object.assign(copy, this);
     return copy;

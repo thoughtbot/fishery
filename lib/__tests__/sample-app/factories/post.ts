@@ -1,10 +1,9 @@
 import { Factory } from 'fishery';
-import { Post, Factories } from '../types';
+import { Post } from '../types';
+import userFactory from './user';
 
-export default Factory.define<Post, Factories>(
-  ({ sequence, params, factories }) => ({
-    id: sequence,
-    title: 'A Post',
-    user: factories.user.build(params.user || {}),
-  }),
-);
+export default Factory.define<Post>(({ sequence, params }) => ({
+  id: sequence,
+  title: 'A Post',
+  user: userFactory.build(params.user || {}),
+}));
