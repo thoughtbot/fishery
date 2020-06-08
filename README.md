@@ -267,6 +267,10 @@ user.memberId; // '1'
 user.permissions.canPost; // true
 ```
 
+Passing transient params to `build` can be a bit verbose. It is often a good
+idea to consider creating a [reusable builder method](#adding-reusable-builders-traits-to-factories) instead of or in
+addition to your transient params to make building objects simpler.
+
 ### After-create hook
 
 You can instruct factories to execute some code after an object is created.
@@ -289,6 +293,90 @@ export default Factory.define<User, Factories>(
   },
 );
 ```
+
+### Extending factories
+
+Factories can easily be extended using the extension methods: `params`,
+`transient`, `associations`, and `afterCreate`. These set default attributes that get passed to the factory on `build`:
+
+```typescript
+const userFactory = Factory.define<User>(() => ({
+  name: 'Kassandra',
+  admin: false,
+}));
+
+const adminFactory = userFactory.params({ admin: true });
+const admin = adminFactory.build();
+admin.admin; // true
+```
+
+Factories are immutable, so the extension methods return a new factory with
+the specified `params`, `transientParams`, `associations`, or `afterCreate`
+added to it. When `build` is called on the factory, the `params`,
+`transientParams`, and `associations` are passed in along with the values
+supplied to `build`. Values supplied to `build` override these defaults.
+
+`afterCreate` just adds a function that is called when the object is built.
+The `afterCreate` defined in `Factory.define` is always called first if
+specified, and then any `afterCreate` functions defined with the extension
+method are called sequentially in the order they were added.
+
+These extension methods can be called multiple times to continue extending
+factories, and they do not modify the original factory:
+
+```typescript
+const eliFactory = userFactory
+  .params({ admin: true })
+  .params({ name: 'Eli' })
+  .afterCreate(user => console.log('hello'))
+  .afterCreate(user => console.log('there'));
+
+const user = eliFactory.build();
+// log: hello
+// log: there
+user.name; // Eli
+user.admin; // true
+
+const user2 = eliFactory.build({ admin: false });
+user.name; // Eli
+user2.admin; // false
+```
+
+### Adding reusable builders (traits) to factories
+
+If you find yourself frequently building objects with a certain set of
+properties, it might be time to either extend the factory or create a
+reusable builder method.
+
+Factories are just classes, so adding reusable builder methods is as simple
+as subclassing `Factory` and defining any desired methods:
+
+```typescript
+class UserFactory extends Factory<User, Factories, UserTransientParams> {
+  admin(adminId: string) {
+    return this.params({
+      admin: true,
+      adminId: adminId || `admin-${this.sequence()}`,
+    });
+  }
+
+  registered() {
+    return this
+      .params({ memberId: this.sequence() })
+      .transient({ registered: true })
+      .associations({ profile: factories.profile.build() })
+      .afterCreate(user => console.log(user))
+  }
+}
+
+// instead of Factory.define<User>
+const userFactory = UserFactory.define(() => ({ ... }))
+
+const user = userFactory.admin().registered().build()
+```
+
+To learn more about the factory builder methods `params`, `transient`,
+`associations`, and `afterCreate`, see [Extending factories](#extending-factories), above.
 
 ### Defining one-off factories without calling `register`
 
