@@ -271,9 +271,9 @@ Passing transient params to `build` can be a bit verbose. It is often a good
 idea to consider creating a [reusable builder method](#adding-reusable-builders-traits-to-factories) instead of or in
 addition to your transient params to make building objects simpler.
 
-### After-create hook
+### After-build hook
 
-You can instruct factories to execute some code after an object is created.
+You can instruct factories to execute some code after an object is built.
 This can be useful if a reference to the object is needed, like when setting
 up relationships:
 

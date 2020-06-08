@@ -21,7 +21,7 @@ const userFactory = Factory.define<User>(({ sequence }) => {
 register({ user: userFactory });
 
 describe('factory.build', () => {
-  it('creates the object', () => {
+  it('builds the object', () => {
     const user = userFactory.build({ name: 'susan' });
     expect(user.id).not.toBeNull();
     expect(user.name).toEqual('susan');
@@ -35,7 +35,7 @@ describe('factory.build', () => {
 });
 
 describe('factory.buildList', () => {
-  it('creates a list of objects with the specified properties', () => {
+  it('builds a list of objects with the specified properties', () => {
     const users = userFactory.buildList(2, { name: 'susan' });
     expect(users.length).toBe(2);
     expect(users[0].id).not.toEqual(users[1].id);
