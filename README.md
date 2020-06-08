@@ -353,7 +353,7 @@ as subclassing `Factory` and defining any desired methods:
 
 ```typescript
 class UserFactory extends Factory<User, Factories, UserTransientParams> {
-  admin(adminId = '') {
+  admin(adminId: string) {
     return this.params({
       admin: true,
       adminId: adminId || `admin-${this.sequence()}`,
