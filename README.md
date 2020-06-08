@@ -148,6 +148,17 @@ const jordan = userFactory.build({ name: 'Jordan' });
 factories.post.build({}, { associations: { author: jordan } });
 ```
 
+If two factories reference each other, they can usually import each other
+without issues, but TypeScript might require you to explicitly type your
+factory before exporting so it can determine the type before the circular
+references resolve:
+
+```typescript
+// the extra Factory<Post> typing can be necessary with circular imports
+const postFactory: Factory<Post> = Factory.define<Post>(() => ({ ...}));
+export default postFactory;
+```
+
 ### Use `params` to access passed in properties
 
 The parameters passed in to `build` are automatically overlaid on top of the
