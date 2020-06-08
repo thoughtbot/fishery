@@ -15,7 +15,7 @@ export class FactoryBuilder<T, F, I> {
   build() {
     const generatorOptions: GeneratorFnOptions<T, F, I> = {
       sequence: this.sequence,
-      afterBuild: this.setAfterCreate,
+      afterBuild: this.setAfterBuild,
       factories: this.factories,
       params: this.params,
       associations: this.associations,
@@ -29,15 +29,15 @@ export class FactoryBuilder<T, F, I> {
     // vs DeepPartial<T>) so can do the following in a factory:
     // `user: associations.user || factories.user.build()`
     merge(object, this.params, this.associations);
-    this._callAfterCreates(object);
+    this._callAfterBuilds(object);
     return object;
   }
 
-  setAfterCreate = (hook: HookFn<T>) => {
+  setAfterBuild = (hook: HookFn<T>) => {
     this.afterBuilds = [hook, ...this.afterBuilds];
   };
 
-  _callAfterCreates(object: T) {
+  _callAfterBuilds(object: T) {
     this.afterBuilds.forEach(afterBuild => {
       if (typeof afterBuild === 'function') {
         afterBuild(object);
