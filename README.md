@@ -2,9 +2,9 @@
 
 [![CircleCI](https://circleci.com/gh/thoughtbot/fishery.svg?style=svg)](https://circleci.com/gh/thoughtbot/fishery)
 
-Fishery is a library for setting up JavaScript objects for use in tests,
-Storybook, and anywhere else you need to set up data. It is loosely modeled
-after the Ruby gem, [factory_bot][factory_bot].
+Fishery is a library for setting up JavaScript objects for use in tests and
+anywhere else you need to set up data. It is loosely modeled after the Ruby
+gem, [factory_bot][factory_bot].
 
 Fishery is built with TypeScript in mind. Factories accept typed parameters and
 return typed objects, so you can be confident that the data used in your tests
@@ -38,32 +38,21 @@ objects. Here's how it's done:
 // factories/user.ts
 import { Factory } from 'fishery';
 import { User } from '../my-types';
+import postFactory from './post';
 
-export default Factory.define<User>(({ sequence, factories }) => ({
+export default Factory.define<User>(({ sequence }) => ({
   id: sequence,
-  name: 'Bob',
-  address: { city: 'Grand Rapids', state: 'MI', country: 'USA' },
-  posts: factories.post.buildList(2),
+  name: 'Rosa',
+  address: { city: 'Austin', state: 'TX', country: 'USA' },
+  posts: postFactory.buildList(2),
 }));
 ```
 
-### Combine factories
-
-Now combine your factories together and register them:
+### Build objects with your factories
 
 ```typescript
-// factories/index.ts
-import { register } from 'fishery';
-import user from './user';
-import post from './post';
-
-export const factories = register({
-  user,
-  post,
-});
+const user = userFactory.build({ name: 'Sandra' });
 ```
-
-### Build objects with your factories
 
 Pass parameters as the first argument to `build` to override your factory
 defaults. These parameters are deep-merged into the default object returned by
@@ -74,8 +63,7 @@ your factory.
 - `transient`: data for use in your factory that doesn't get overlaid onto your
   result object. More on this in the [Transient
   Params](#params-that-dont-map-to-the-result-object-transient-params) section
-- `associations`: often not required but can be useful in the case of
-  bi-directional associations. More on this in the [Associations](#Associations)
+- `associations`: often not required but can be useful in order to short-circuit creating associations. More on this in the [Associations](#Associations)
   section
 
 ```typescript
@@ -110,7 +98,7 @@ const user = factories.user.build({ foo: 'bar' }); // type error! Argument of ty
 ```
 
 ```typescript
-export default Factory.define<User, Factories, UserTransientParams>(
+export default Factory.define<User, UserTransientParams>(
   ({ sequence, params, transientParams, associations, afterBuild }) => {
     params.firstName; // Property 'firstName' does not exist on type 'DeepPartial<User>
     transientParams.foo; // Property 'foo' does not exist on type 'Partial<UserTransientParams>'
@@ -131,61 +119,33 @@ export default Factory.define<User, Factories, UserTransientParams>(
 
 ### Associations
 
-If your factory references another factory, use the `factories` object
-provided to the factory:
+Factories can import and reference other factories for associations:
 
 ```typescript
-const postFactory = Factory.define<Post, Factories>(({ factories }) => ({
+import userFactory from './user';
+
+const postFactory = Factory.define<Post>(() => ({
   title: 'My Blog Post',
-  author: factories.user.build(),
+  author: userFactory.build(),
 }));
 ```
 
 If you'd like to be able to pass in an association when building your object and
-short-circuit the call to `factories.xxx.build()`, use the `associations`
+short-circuit the call to `yourFactory.build()`, use the `associations`
 variable provided to your factory:
 
 ```typescript
-const postFactory = Factory.define<Post, Factories>(
-  ({ factories, associations }) => ({
-    title: 'My Blog Post',
-    author: associations.author || factories.user.build(),
-  }),
-);
+const postFactory = Factory.define<Post>(({ associations }) => ({
+  title: 'My Blog Post',
+  author: associations.author || userFactory.build(),
+}));
 ```
 
 Then build your object like this:
 
 ```typescript
-factories.post.build({}, { associations: { author: susan } });
-```
-
-#### Typing the `factories` factory argument
-
-In the above examples, the `Factories` generic parameter is passed to
-`define`. This is optional but recommended in order to get type-checking of
-the `factories` object. You can define your `Factories` type like this:
-
-```typescript
-// factories/types.ts
-export interface Factories {
-  user: Factory<User>;
-  post: Factory<Post>;
-}
-```
-
-Once you've defined your `Factories` type, it can also be used when
-registering your factories. This ensures that your `Factories` type is always
-in sync with the actual factories that you have registered:
-
-```typescript
-// factories/index.ts
-import { register } from 'fishery';
-import user from './user';
-import post from './post';
-import { Factories } from './types';
-
-export const factories: Factories = register({ user, post });
+const jordan = userFactory.build({ name: 'Jordan' });
+factories.post.build({}, { associations: { author: jordan } });
 ```
 
 ### Use `params` to access passed in properties
@@ -196,7 +156,7 @@ explicitly access the params in your factory. This can, however, be useful,
 for example, if your factory uses the params to compute other properties:
 
 ```typescript
-const userFactory = Factory.define<User, Factories>(({ params }) => {
+const userFactory = Factory.define<User>(({ params }) => {
   const { name = 'Bob Smith' } = params;
   const email = params.email || `${kebabCase(name)}@example.com`;
 
@@ -234,13 +194,13 @@ interface UserTransientParams {
   numPosts: number;
 }
 
-const userFactory = Factory.define<User, Factories, UserTransientParams>(
-  ({ transientParams, factories, sequence }) => {
+const userFactory = Factory.define<User, UserTransientParams>(
+  ({ transientParams, sequence }) => {
     const { registered, numPosts = 1 } = transientParams;
 
     const user = {
       name: 'Susan Velasquez',
-      posts: factories.posts.buildList(numPosts),
+      posts: postFactory.buildList(numPosts),
       memberId: registered ? `member-${sequence}` : null,
       permissions: {
         canPost: registered,
@@ -251,9 +211,8 @@ const userFactory = Factory.define<User, Factories, UserTransientParams>(
 ```
 
 In the example above, we also created a type called `UserTransientParams` and
-passed it as the third generic type to `define`. This isn't required but
-gives you type checking of transient params, both in the factory and when
-calling `build`.
+passed it as the second generic type to `define`. This gives you type
+checking of transient params, both in the factory and when calling `build`.
 
 When constructing objects, any regular params you pass to `build` take
 precedence over the transient params:
@@ -278,20 +237,18 @@ This can be useful if a reference to the object is needed, like when setting
 up relationships:
 
 ```typescript
-export default Factory.define<User, Factories>(
-  ({ factories, sequence, afterBuild }) => {
-    afterBuild(user => {
-      const post = factories.post.build({}, { associations: { author: user } });
-      user.posts.push(post);
-    });
+export default Factory.define<User>(({ sequence, afterBuild }) => {
+  afterBuild(user => {
+    const post = factories.post.build({}, { associations: { author: user } });
+    user.posts.push(post);
+  });
 
-    return {
-      id: sequence,
-      name: 'Bob',
-      posts: [],
-    };
-  },
-);
+  return {
+    id: sequence,
+    name: 'Bob',
+    posts: [],
+  };
+});
 ```
 
 ### Extending factories
@@ -310,11 +267,12 @@ const admin = adminFactory.build();
 admin.admin; // true
 ```
 
-Factories are immutable, so the extension methods return a new factory with
-the specified `params`, `transientParams`, `associations`, or `afterBuild`
-added to it. When `build` is called on the factory, the `params`,
-`transientParams`, and `associations` are passed in along with the values
-supplied to `build`. Values supplied to `build` override these defaults.
+The extension methods return a new factory with the specified `params`,
+`transientParams`, `associations`, or `afterBuild` added to it and do not
+modify the factory they are called on. When `build` is called on the factory,
+the `params`, `transientParams`, and `associations` are passed in along with
+the values supplied to `build`. Values supplied to `build` override these
+defaults.
 
 `afterBuild` just adds a function that is called when the object is built.
 The `afterBuild` defined in `Factory.define` is always called first if
@@ -352,8 +310,8 @@ Factories are just classes, so adding reusable builder methods is as simple
 as subclassing `Factory` and defining any desired methods:
 
 ```typescript
-class UserFactory extends Factory<User, Factories, UserTransientParams> {
-  admin(adminId: string) {
+class UserFactory extends Factory<User, UserTransientParams> {
+  admin(adminId?: string) {
     return this.params({
       admin: true,
       adminId: adminId || `admin-${this.sequence()}`,
@@ -364,7 +322,7 @@ class UserFactory extends Factory<User, Factories, UserTransientParams> {
     return this
       .params({ memberId: this.sequence() })
       .transient({ registered: true })
-      .associations({ profile: factories.profile.build() })
+      .associations({ profile: profileFactory.build() })
       .afterBuild(user => console.log(user))
   }
 }
@@ -377,39 +335,6 @@ const user = userFactory.admin().registered().build()
 
 To learn more about the factory builder methods `params`, `transient`,
 `associations`, and `afterBuild`, see [Extending factories](#extending-factories), above.
-
-### Defining one-off factories without calling `register`
-
-Factories should usually be defined and then combined together using `register`:
-
-```typescript
-// factories/index.ts
-import { register } from 'fishery';
-import user from './user';
-import post from './post';
-import { Factories } from './types';
-
-export const factories: Factories = register({ user, post });
-```
-
-The factories passed to register get injected into each factory so factories can
-access each other. This prevents circular dependencies that could arise if your
-factories try to access other factories directly by importing them and also
-creates a convenient way for factories to access other factories without having
-to explicitly import them.
-
-If you are defining a factory for use in a single test file, you might not wish
-to register the factory or use the `factories` object that gets injected to the
-factory. In this case, you can use `defineUnregistered` instead of `define` and
-then skip calling `register`, eg:
-
-```typescript
-const personFactory = Factory.defineUnregistered<Person>(() => ({
-  name: 'Sasha',
-}));
-
-const person = personFactory.build();
-```
 
 ### Rewind Sequence
 
