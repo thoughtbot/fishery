@@ -9,13 +9,13 @@ export class FactoryBuilder<T, F, I> {
     private params: DeepPartial<T>,
     private transientParams: Partial<I>,
     private associations: Partial<T>,
-    private afterCreates: HookFn<T>[],
+    private afterBuilds: HookFn<T>[],
   ) {}
 
   build() {
     const generatorOptions: GeneratorFnOptions<T, F, I> = {
       sequence: this.sequence,
-      afterCreate: this.setAfterCreate,
+      afterBuild: this.setAfterCreate,
       factories: this.factories,
       params: this.params,
       associations: this.associations,
@@ -34,15 +34,15 @@ export class FactoryBuilder<T, F, I> {
   }
 
   setAfterCreate = (hook: HookFn<T>) => {
-    this.afterCreates = [hook, ...this.afterCreates];
+    this.afterBuilds = [hook, ...this.afterBuilds];
   };
 
   _callAfterCreates(object: T) {
-    this.afterCreates.forEach(afterCreate => {
-      if (typeof afterCreate === 'function') {
-        afterCreate(object);
+    this.afterBuilds.forEach(afterBuild => {
+      if (typeof afterBuild === 'function') {
+        afterBuild(object);
       } else {
-        throw new Error('"afterCreate" must be a function');
+        throw new Error('"afterBuild" must be a function');
       }
     });
   }

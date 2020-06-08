@@ -111,12 +111,12 @@ const user = factories.user.build({ foo: 'bar' }); // type error! Argument of ty
 
 ```typescript
 export default Factory.define<User, Factories, UserTransientParams>(
-  ({ sequence, params, transientParams, associations, afterCreate }) => {
+  ({ sequence, params, transientParams, associations, afterBuild }) => {
     params.firstName; // Property 'firstName' does not exist on type 'DeepPartial<User>
     transientParams.foo; // Property 'foo' does not exist on type 'Partial<UserTransientParams>'
     associations.bar; // Property 'bar' does not exist on type 'Partial<User>'
 
-    afterCreate(user => {
+    afterBuild(user => {
       user.foo; // Property 'foo' does not exist on type 'User'
     });
 
@@ -279,8 +279,8 @@ up relationships:
 
 ```typescript
 export default Factory.define<User, Factories>(
-  ({ factories, sequence, afterCreate }) => {
-    afterCreate(user => {
+  ({ factories, sequence, afterBuild }) => {
+    afterBuild(user => {
       const post = factories.post.build({}, { associations: { author: user } });
       user.posts.push(post);
     });
@@ -297,7 +297,7 @@ export default Factory.define<User, Factories>(
 ### Extending factories
 
 Factories can easily be extended using the extension methods: `params`,
-`transient`, `associations`, and `afterCreate`. These set default attributes that get passed to the factory on `build`:
+`transient`, `associations`, and `afterBuild`. These set default attributes that get passed to the factory on `build`:
 
 ```typescript
 const userFactory = Factory.define<User>(() => ({
@@ -311,14 +311,14 @@ admin.admin; // true
 ```
 
 Factories are immutable, so the extension methods return a new factory with
-the specified `params`, `transientParams`, `associations`, or `afterCreate`
+the specified `params`, `transientParams`, `associations`, or `afterBuild`
 added to it. When `build` is called on the factory, the `params`,
 `transientParams`, and `associations` are passed in along with the values
 supplied to `build`. Values supplied to `build` override these defaults.
 
-`afterCreate` just adds a function that is called when the object is built.
-The `afterCreate` defined in `Factory.define` is always called first if
-specified, and then any `afterCreate` functions defined with the extension
+`afterBuild` just adds a function that is called when the object is built.
+The `afterBuild` defined in `Factory.define` is always called first if
+specified, and then any `afterBuild` functions defined with the extension
 method are called sequentially in the order they were added.
 
 These extension methods can be called multiple times to continue extending
@@ -328,8 +328,8 @@ factories, and they do not modify the original factory:
 const eliFactory = userFactory
   .params({ admin: true })
   .params({ name: 'Eli' })
-  .afterCreate(user => console.log('hello'))
-  .afterCreate(user => console.log('there'));
+  .afterBuild(user => console.log('hello'))
+  .afterBuild(user => console.log('there'));
 
 const user = eliFactory.build();
 // log: hello
@@ -365,7 +365,7 @@ class UserFactory extends Factory<User, Factories, UserTransientParams> {
       .params({ memberId: this.sequence() })
       .transient({ registered: true })
       .associations({ profile: factories.profile.build() })
-      .afterCreate(user => console.log(user))
+      .afterBuild(user => console.log(user))
   }
 }
 
@@ -376,7 +376,7 @@ const user = userFactory.admin().registered().build()
 ```
 
 To learn more about the factory builder methods `params`, `transient`,
-`associations`, and `afterCreate`, see [Extending factories](#extending-factories), above.
+`associations`, and `afterBuild`, see [Extending factories](#extending-factories), above.
 
 ### Defining one-off factories without calling `register`
 

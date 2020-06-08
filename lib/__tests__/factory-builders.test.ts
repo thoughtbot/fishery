@@ -46,56 +46,56 @@ const userFactory = UserFactory.define(({ associations, transientParams }) => {
 
 register({ user: userFactory, post: postFactory });
 
-describe('afterCreate', () => {
+describe('afterBuild', () => {
   it('defines a function that is called after build', () => {
-    const afterCreate = jest.fn(user => {
+    const afterBuild = jest.fn(user => {
       user.id = '123';
       return user;
     });
-    const user = userFactory.afterCreate(afterCreate).build();
+    const user = userFactory.afterBuild(afterBuild).build();
     expect(user.id).toEqual('123');
-    expect(afterCreate).toHaveBeenCalledWith(user);
+    expect(afterBuild).toHaveBeenCalledWith(user);
   });
 
-  it('calls chained or inherited afterCreates sequentially', () => {
-    const afterCreate1 = jest.fn(user => {
+  it('calls chained or inherited afterBuilds sequentially', () => {
+    const afterBuild1 = jest.fn(user => {
       user.id = 'a';
       return user;
     });
-    const afterCreate2 = jest.fn(user => {
+    const afterBuild2 = jest.fn(user => {
       user.id = 'b';
       return user;
     });
 
     const user = userFactory
-      .afterCreate(afterCreate1)
-      .afterCreate(afterCreate2)
+      .afterBuild(afterBuild1)
+      .afterBuild(afterBuild2)
       .build();
     expect(user.id).toEqual('b');
-    expect(afterCreate1).toHaveBeenCalledTimes(1);
-    expect(afterCreate2).toHaveBeenCalledTimes(1);
+    expect(afterBuild1).toHaveBeenCalledTimes(1);
+    expect(afterBuild2).toHaveBeenCalledTimes(1);
   });
 
-  it('calls afterCreate from the generator function before those later defined by builder', () => {
-    const afterCreateGenerator = jest.fn(user => {
+  it('calls afterBuild from the generator function before those later defined by builder', () => {
+    const afterBuildGenerator = jest.fn(user => {
       user.id = 'generator';
       return user;
     });
-    const afterCreateBuilder = jest.fn(user => {
+    const afterBuildBuilder = jest.fn(user => {
       user.id = 'builder';
       return user;
     });
 
     type User = { id: string };
-    const userFactory = Factory.defineUnregistered<User>(({ afterCreate }) => {
-      afterCreate(afterCreateGenerator);
+    const userFactory = Factory.defineUnregistered<User>(({ afterBuild }) => {
+      afterBuild(afterBuildGenerator);
       return { id: '1' };
     });
 
-    const user = userFactory.afterCreate(afterCreateBuilder).build();
+    const user = userFactory.afterBuild(afterBuildBuilder).build();
     expect(user.id).toEqual('builder');
-    expect(afterCreateGenerator).toHaveBeenCalledTimes(1);
-    expect(afterCreateBuilder).toHaveBeenCalledTimes(1);
+    expect(afterBuildGenerator).toHaveBeenCalledTimes(1);
+    expect(afterBuildBuilder).toHaveBeenCalledTimes(1);
   });
 });
 

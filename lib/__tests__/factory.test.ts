@@ -42,26 +42,26 @@ describe('factory.buildList', () => {
     expect(users.map(u => u.name)).toEqual(['susan', 'susan']);
   });
 
-  it('calls afterCreate for each item', () => {
-    const afterCreateFn = jest.fn(user => {
+  it('calls afterBuild for each item', () => {
+    const afterBuildFn = jest.fn(user => {
       user.name = 'Bill';
     });
 
-    const factory = Factory.define<User>(({ afterCreate }) => {
-      afterCreate(afterCreateFn);
+    const factory = Factory.define<User>(({ afterBuild }) => {
+      afterBuild(afterBuildFn);
       return { id: '1', name: 'Ralph' };
     });
 
     register({ user: factory });
     expect(factory.buildList(2).every(u => u.name === 'Bill')).toBeTruthy();
-    expect(afterCreateFn).toHaveBeenCalledTimes(2);
+    expect(afterBuildFn).toHaveBeenCalledTimes(2);
   });
 });
 
-describe('afterCreate', () => {
+describe('afterBuild', () => {
   it('passes the object for manipulation', () => {
-    const factory = Factory.define<User>(({ afterCreate }) => {
-      afterCreate(user => {
+    const factory = Factory.define<User>(({ afterBuild }) => {
+      afterBuild(user => {
         user.id = 'bla';
       });
 
@@ -74,8 +74,8 @@ describe('afterCreate', () => {
 
   describe('when not a function', () => {
     it('raises an error', () => {
-      const factory = Factory.define<User>(({ afterCreate }) => {
-        afterCreate(('5' as unknown) as HookFn<User>);
+      const factory = Factory.define<User>(({ afterBuild }) => {
+        afterBuild(('5' as unknown) as HookFn<User>);
         return { id: '1', name: 'Ralph' };
       });
 

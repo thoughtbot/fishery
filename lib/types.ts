@@ -1,7 +1,7 @@
 export type DeepPartial<T> = { [P in keyof T]?: DeepPartial<T[P]> };
 export type GeneratorFnOptions<T, F, I> = {
   sequence: number;
-  afterCreate: (fn: HookFn<T>) => any;
+  afterBuild: (fn: HookFn<T>) => any;
   params: DeepPartial<T>;
   associations: Partial<T>;
   transientParams: Partial<I>;

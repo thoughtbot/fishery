@@ -31,10 +31,10 @@ describe('associations', () => {
 
   it('can create bi-directional has-many/belongs-to associations', () => {
     const userFactory = Factory.define<User, Factories>(
-      ({ factories, afterCreate, transientParams }) => {
+      ({ factories, afterBuild, transientParams }) => {
         const { skipPosts } = transientParams;
 
-        afterCreate(user => {
+        afterBuild(user => {
           if (!skipPosts) {
             user.posts.push(
               factories.post.build({}, { associations: { user } }),
