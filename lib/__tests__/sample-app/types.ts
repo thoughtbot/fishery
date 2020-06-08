@@ -1,7 +1,7 @@
 export interface User {
   id: string;
   name: string;
-  post: Post | null;
+  posts: Post[];
 }
 
 export interface Post {
