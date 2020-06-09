@@ -102,7 +102,7 @@ describe('factory.rewindSequence', () => {
     expect(factory.build().id).toBe('user-2');
   });
 
-  it('sets sequence back to zero after buildList', () => {
+  it('sets sequence back to one after buildList', () => {
     const factory = Factory.define<User>(({ sequence }) => {
       return { id: `user-${sequence}`, name: 'Ralph' };
     });
