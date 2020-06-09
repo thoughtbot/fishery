@@ -11,7 +11,7 @@ export interface AnyFactories {
   [key: string]: Factory<any>;
 }
 
-const SEQUENCE_START_VALUE: number = 1;
+const SEQUENCE_START_VALUE = 1;
 
 export class Factory<T, F = any, I = any> {
   private nextId: number = SEQUENCE_START_VALUE;
