@@ -95,11 +95,11 @@ describe('factory.rewindSequence', () => {
 
     register({ user: factory });
 
-    expect(factory.build().id).toBe('user-0');
+    expect(factory.build().id).toBe('user-1');
 
     factory.rewindSequence();
-    expect(factory.build().id).toBe('user-0');
     expect(factory.build().id).toBe('user-1');
+    expect(factory.build().id).toBe('user-2');
   });
 
   it('sets sequence back to zero after buildList', () => {
@@ -110,15 +110,15 @@ describe('factory.rewindSequence', () => {
     register({ user: factory });
 
     expect(factory.buildList(2)).toEqual([
-      { id: 'user-0', name: 'Ralph' },
       { id: 'user-1', name: 'Ralph' },
+      { id: 'user-2', name: 'Ralph' },
     ]);
 
     factory.rewindSequence();
 
     expect(factory.buildList(2)).toEqual([
-      { id: 'user-0', name: 'Ralph' },
       { id: 'user-1', name: 'Ralph' },
+      { id: 'user-2', name: 'Ralph' },
     ]);
   });
 });

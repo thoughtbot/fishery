@@ -429,7 +429,6 @@ You can rewind a factory's sequence at your discretion
 ```typescript
 import { factories } from './factories';
 
-factories.user.build(); // { email: 'person0@example.com' }
 factories.user.build(); // { email: 'person1@example.com' }
 factories.user.build(); // { email: 'person2@example.com' }
 
