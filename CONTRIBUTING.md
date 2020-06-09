@@ -41,3 +41,30 @@ Push to your fork. Write a [good commit message][commit]. Submit a pull request.
 Others will give constructive feedback. This is a time for discussion and
 improvements, and making the necessary changes will be required before we can
 merge the contribution.
+
+## Publishing to NPM
+
+First, ensure you have the latest version of the `master` branch checked out, then build the code with:
+
+```
+yarn build
+```
+
+This compiles the TypeScript code to the `dist` directory. Only the compiled code is published to NPM. The `package.json` sets the `main` file as `dist/index.js`. Visually look at the build folder to ensure it has the expected files.
+
+Next, increment the version using one of the following commands, according to semantic versioning guidelines:
+
+```
+# minor fixes and improvements
+npm version patch
+
+# new non-breaking features
+npm version minor
+
+# breaking changes
+npm version major
+```
+
+Next, run `npm publish` to publish to NPM. Only thoughtbot employees with access to our NPM account can publish new versions.
+
+Finally, push up the tag that was created by the `npm version` command with `git push origin {tag name}` and then create a release in GitHub with a description of what changed. Be sure to explicitly call out any breaking changes.
