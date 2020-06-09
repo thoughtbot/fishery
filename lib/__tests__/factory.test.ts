@@ -88,7 +88,7 @@ describe('afterCreate', () => {
 });
 
 describe('factory.rewindSequence', () => {
-  it('sets sequence back to zero after build', () => {
+  it('sets sequence back to one after build', () => {
     const factory = Factory.define<User>(({ sequence }) => {
       return { id: `user-${sequence}`, name: 'Ralph' };
     });
