@@ -86,3 +86,39 @@ describe('afterCreate', () => {
     });
   });
 });
+
+describe('factory.rewindSequence', () => {
+  it('sets sequence back to one after build', () => {
+    const factory = Factory.define<User>(({ sequence }) => {
+      return { id: `user-${sequence}`, name: 'Ralph' };
+    });
+
+    register({ user: factory });
+
+    expect(factory.build().id).toBe('user-1');
+
+    factory.rewindSequence();
+    expect(factory.build().id).toBe('user-1');
+    expect(factory.build().id).toBe('user-2');
+  });
+
+  it('sets sequence back to one after buildList', () => {
+    const factory = Factory.define<User>(({ sequence }) => {
+      return { id: `user-${sequence}`, name: 'Ralph' };
+    });
+
+    register({ user: factory });
+
+    expect(factory.buildList(2)).toEqual([
+      { id: 'user-1', name: 'Ralph' },
+      { id: 'user-2', name: 'Ralph' },
+    ]);
+
+    factory.rewindSequence();
+
+    expect(factory.buildList(2)).toEqual([
+      { id: 'user-1', name: 'Ralph' },
+      { id: 'user-2', name: 'Ralph' },
+    ]);
+  });
+});
