@@ -1,4 +1,4 @@
-import { register, Factory } from 'fishery';
+import { Factory } from 'fishery';
 
 type Post = { id: string };
 type User = {
@@ -15,7 +15,7 @@ type User = {
 const postFactory = Factory.define<Post>(() => ({ id: '1' }));
 
 type TransientParams = { registered: boolean };
-class UserFactory extends Factory<User, any, TransientParams> {
+class UserFactory extends Factory<User, TransientParams> {
   admin(adminId = '') {
     return this.params({
       admin: true,
@@ -43,8 +43,6 @@ const userFactory = UserFactory.define(({ associations, transientParams }) => {
     post: associations.post || postFactory.build(),
   };
 });
-
-register({ user: userFactory, post: postFactory });
 
 describe('afterBuild', () => {
   it('defines a function that is called after build', () => {
@@ -87,7 +85,7 @@ describe('afterBuild', () => {
     });
 
     type User = { id: string };
-    const userFactory = Factory.defineUnregistered<User>(({ afterBuild }) => {
+    const userFactory = Factory.define<User>(({ afterBuild }) => {
       afterBuild(afterBuildGenerator);
       return { id: '1' };
     });

@@ -1,4 +1,4 @@
-import { Factory, HookFn, register } from 'fishery';
+import { Factory } from 'fishery';
 
 describe('Using with classes', () => {
   class Address {
@@ -15,10 +15,6 @@ describe('Using with classes', () => {
   const userFactory = Factory.define<User>(
     () => new User('Sharon', new Address('Detroit', 'MI')),
   );
-
-  register({
-    user: userFactory,
-  });
 
   it('works correctly with read-only properties', () => {
     const user = userFactory.build();
