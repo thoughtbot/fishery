@@ -49,12 +49,12 @@
     ]
   },
   "devDependencies": {
-    "@types/jest": "^23.3.12",
+    "@types/jest": "^26.0.3",
     "@types/lodash.merge": "^4.6.6",
-    "jest": "^24.9.0",
-    "prettier": "^1.19.1",
-    "ts-jest": "^24.1.0",
-    "typescript": "^3.7.2"
+    "jest": "^26.1.0",
+    "prettier": "^2.0.5",
+    "ts-jest": "^26.1.1",
+    "typescript": "^3.9.5"
   },
   "dependencies": {
     "lodash.merge": "^4.6.2"
