@@ -16,7 +16,7 @@ const SEQUENCE_START_VALUE = 1;
 export class Factory<T, F = any, I = any> {
   private nextId: number = SEQUENCE_START_VALUE;
   private factories?: F;
-  private _afterCreates: HookFn<T>[] = [];
+  private _afterBuilds: HookFn<T>[] = [];
   private _associations: Partial<T> = {};
   private _params: DeepPartial<T> = {};
   private _transient: Partial<I> = {};
@@ -72,7 +72,7 @@ export class Factory<T, F = any, I = any> {
       { ...this._params, ...params },
       { ...this._transient, ...options.transient },
       { ...this._associations, ...options.associations },
-      this._afterCreates,
+      this._afterBuilds,
     ).build();
   }
 
@@ -91,12 +91,12 @@ export class Factory<T, F = any, I = any> {
 
   /**
    * Extend the factory by adding a function to be called after an object is built.
-   * @param afterCreateFn - the function to call. It accepts your object of type T. The value this function returns gets returned from "build"
+   * @param afterBuildFn - the function to call. It accepts your object of type T. The value this function returns gets returned from "build"
    * @returns a new factory
    */
-  afterCreate(afterCreateFn: HookFn<T>): this {
+  afterBuild(afterBuildFn: HookFn<T>): this {
     const factory = this.clone();
-    factory._afterCreates.push(afterCreateFn);
+    factory._afterBuilds.push(afterBuildFn);
     return factory;
   }
 
