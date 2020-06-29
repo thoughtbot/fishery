@@ -34,6 +34,7 @@
   },
   "homepage": "https://github.com/thoughtbot/fishery#readme",
   "prettier": {
+    "arrowParens": "avoid",
     "useTabs": false,
     "singleQuote": true,
     "trailingComma": "all",
