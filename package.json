@@ -20,6 +20,7 @@
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "test": "jest",
     "testinit": "jest --init",
+    "prepare": "npm run build",
     "pretty": "prettier --write '{*,.*,lib/**/*}.{ts,json,md}'",
     "verifyPretty": "prettier --check '{*,.*,lib/**/*}.{ts,json,md}'"
   },
