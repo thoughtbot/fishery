@@ -72,12 +72,12 @@ import { factories } from './factories';
 
 const user = factories.user.build({
   name: 'Susan',
-  address: { city: 'Detroit' },
+  address: { city: 'El Paso' },
 });
 
 user.name; // Susan
-user.address.city; // Detroit
-user.address.state; // MI (from factory)
+user.address.city; // El Paso
+user.address.state; // TX (from factory)
 ```
 
 ## Documentation
