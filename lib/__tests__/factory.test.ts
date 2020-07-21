@@ -113,3 +113,49 @@ describe('factory.rewindSequence', () => {
     ]);
   });
 });
+
+describe('factory.tuples', () => {
+  it('builds a tuple', () => {
+    expect(
+      Factory.define<[string]>(() => ['STRING']).build(),
+    ).toEqual(['STRING']);
+  });
+
+  it('not overrides the tuple with empty array', () => {
+    expect(
+      Factory.define<[string]>(() => ['STRING']).build([]),
+    ).toEqual(['STRING']);
+  });
+
+  it('overrides the tuple', () => {
+    expect(
+      Factory.define<[string]>(() => ['STRING']).build(['VALUE']),
+    ).toEqual(['VALUE']);
+  });
+});
+
+describe('factory.arrays', () => {
+  it('builds an empty array of strings', () => {
+    expect(
+      Factory.define<string[]>(() => []).build(),
+    ).toEqual([]);
+  });
+
+  it('builds a non-empty array of string', () => {
+    expect(
+      Factory.define<string[]>(() => ['STRING']).build(),
+    ).toEqual(['STRING']);
+  });
+
+  it('overrides the array', () => {
+    expect(
+      Factory.define<string[]>(() => ['STRING']).build(['VALUE']),
+    ).toEqual(['VALUE']);
+  });
+
+  it('overrides the array with empty array', () => {
+    expect(
+      Factory.define<string[]>(() => ['STRING']).build([]),
+    ).toEqual([]);
+  });
+});
