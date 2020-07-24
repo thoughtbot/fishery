@@ -1,4 +1,6 @@
-export type DeepPartial<T> = { [P in keyof T]?: unknown extends T[P] ? T[P] : DeepPartial<T[P]> };
+export type DeepPartial<T> = {
+  [P in keyof T]?: unknown extends T[P] ? T[P] : DeepPartial<T[P]>;
+};
 export type GeneratorFnOptions<T, I> = {
   sequence: number;
   afterBuild: (fn: HookFn<T>) => any;
