@@ -1,5 +1,4 @@
 import { GeneratorFn, HookFn, GeneratorFnOptions, DeepPartial } from './types';
-import isArray from 'lodash.isarray';
 import mergeWith from 'lodash.mergewith';
 
 export class FactoryBuilder<T, I> {
@@ -51,7 +50,7 @@ export class FactoryBuilder<T, I> {
 }
 
 const mergeCustomizer = (_object: any, srcVal: any) => {
-  if (isArray(srcVal)) {
+  if (Array.isArray(srcVal)) {
     return srcVal;
   }
 };

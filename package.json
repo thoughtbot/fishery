@@ -51,7 +51,6 @@
   },
   "devDependencies": {
     "@types/jest": "^26.0.3",
-    "@types/lodash.isarray": "^4.0.6",
     "@types/lodash.mergewith": "^4.6.6",
     "jest": "^26.1.0",
     "prettier": "^2.0.5",
@@ -59,7 +58,6 @@
     "typescript": "^3.9.5"
   },
   "dependencies": {
-    "lodash.isarray": "^4.0.0",
     "lodash.mergewith": "^4.6.2"
   }
 }
