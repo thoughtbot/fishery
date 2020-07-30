@@ -1,5 +1,5 @@
 import { GeneratorFn, HookFn, GeneratorFnOptions, DeepPartial } from './types';
-import merge from 'lodash.merge';
+import mergeWith from 'lodash.mergewith';
 
 export class FactoryBuilder<T, I> {
   constructor(
@@ -21,12 +21,7 @@ export class FactoryBuilder<T, I> {
     };
 
     const object = this.generator(generatorOptions);
-
-    // merge params and associations into object. The only reason 'associations'
-    // is separated is because it is typed differently from `params` (Partial<T>
-    // vs DeepPartial<T>) so can do the following in a factory:
-    // `user: associations.user || userFactory.build()`
-    merge(object, this.params, this.associations);
+    this._mergeParamsOntoObject(object);
     this._callAfterBuilds(object);
     return object;
   }
@@ -34,6 +29,14 @@ export class FactoryBuilder<T, I> {
   setAfterBuild = (hook: HookFn<T>) => {
     this.afterBuilds = [hook, ...this.afterBuilds];
   };
+
+  // merge params and associations into object. The only reason 'associations'
+  // is separated is because it is typed differently from `params` (Partial<T>
+  // vs DeepPartial<T>) so can do the following in a factory:
+  // `user: associations.user || userFactory.build()`
+  _mergeParamsOntoObject(object: T) {
+    mergeWith(object, this.params, this.associations, mergeCustomizer);
+  }
 
   _callAfterBuilds(object: T) {
     this.afterBuilds.forEach(afterBuild => {
@@ -45,3 +48,9 @@ export class FactoryBuilder<T, I> {
     });
   }
 }
+
+const mergeCustomizer = (_object: any, srcVal: any) => {
+  if (Array.isArray(srcVal)) {
+    return srcVal;
+  }
+};
