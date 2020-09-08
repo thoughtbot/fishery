@@ -1,5 +1,6 @@
 export interface User {
   id: string;
+  created: boolean;
   name: string;
   posts: Post[];
 }

@@ -67,6 +67,37 @@ describe('factory.create', () => {
   });
 });
 
+describe('factory.createList', () => {
+  it('creates a list of objects with the specified properties', async () => {
+    const promise = userFactory.createList(2, { name: 'susan' });
+    expect(promise).toBeInstanceOf(Promise);
+
+    const users = await promise;
+    expect(users.length).toBe(2);
+    expect(users[0].id).not.toEqual(users[1].id);
+    expect(users.map(u => u.name)).toEqual(['susan', 'susan']);
+  });
+
+  it('calls onCreate for each item', async () => {
+    const onCreateFn = jest.fn(user => {
+      user.name = 'Bill';
+      return Promise.resolve(user);
+    });
+
+    const factory = Factory.define<User>(({ onCreate }) => {
+      onCreate(onCreateFn);
+      return { id: '1', name: 'Ralph' };
+    });
+
+    const promise = factory.createList(2, { name: 'susan' });
+    expect(promise).toBeInstanceOf(Promise);
+
+    const users = await promise;
+    expect(users.every(u => u.name === 'Bill')).toBeTruthy();
+    expect(onCreateFn).toHaveBeenCalledTimes(2);
+  });
+});
+
 describe('afterBuild', () => {
   it('passes the object for manipulation', () => {
     const factory = Factory.define<User>(({ afterBuild }) => {
