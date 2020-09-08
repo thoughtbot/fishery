@@ -1,4 +1,4 @@
-import { Factory, HookFn } from 'fishery';
+import { CreateFn, Factory, HookFn } from 'fishery';
 
 type User = {
   id: string;
@@ -55,6 +55,18 @@ describe('factory.buildList', () => {
   });
 });
 
+describe('factory.create', () => {
+  it('creates the object with a promise', async () => {
+    const promise = userFactory.create({ name: 'susan' });
+    expect(promise).toBeInstanceOf(Promise);
+
+    const user = await promise;
+    expect(user.id).not.toBeNull();
+    expect(user.name).toEqual('susan');
+    expect(user.address?.state).toEqual('MI');
+  });
+});
+
 describe('afterBuild', () => {
   it('passes the object for manipulation', () => {
     const factory = Factory.define<User>(({ afterBuild }) => {
@@ -78,6 +90,35 @@ describe('afterBuild', () => {
       expect(() => {
         factory.build();
       }).toThrowError(/must be a function/);
+    });
+  });
+});
+
+describe('onCreate', () => {
+  it('passes the object for manipulation', async () => {
+    const factory = Factory.define<User>(({ onCreate }) => {
+      onCreate(user => {
+        user.id = 'bla';
+        return Promise.resolve(user);
+      });
+
+      return { id: '1', name: 'Ralph' };
+    });
+
+    const user = await factory.create();
+    expect(user.id).toEqual('bla');
+  });
+
+  describe('when not a function', () => {
+    it('raises an error', () => {
+      const factory = Factory.define<User>(({ onCreate }) => {
+        onCreate(('5' as unknown) as CreateFn<User>);
+        return { id: '1', name: 'Ralph' };
+      });
+
+      return expect(factory.create()).rejects.toThrowError(
+        /must be a function/,
+      );
     });
   });
 });

@@ -80,6 +80,32 @@ user.address.city; // El Paso
 user.address.state; // TX (from factory)
 ```
 
+### Create objects with your factories
+
+```typescript
+const user = await userFactory.create({ name: 'Sandra' });
+```
+
+Pass the same parameters to `create` as you would to `build` and receive a promise
+that resolves to the built object. Any defined handlers will be chained together to
+build the final promise.
+
+```typescript
+// my-test.test.ts
+import { factories } from './factories';
+
+factories.user
+  .create({
+    name: 'Susan',
+    address: { city: 'El Paso' },
+  })
+  .then(user => {
+    user.name; // Susan
+    user.address.city; // El Paso
+    user.address.state; // TX (from factory)
+  });
+```
+
 ## Documentation
 
 ### Typechecking
@@ -99,7 +125,14 @@ const user = factories.user.build({ foo: 'bar' }); // type error! Argument of ty
 
 ```typescript
 export default Factory.define<User, UserTransientParams>(
-  ({ sequence, params, transientParams, associations, afterBuild }) => {
+  ({
+    sequence,
+    params,
+    transientParams,
+    associations,
+    afterBuild,
+    onCreate,
+  }) => {
     params.firstName; // Property 'firstName' does not exist on type 'DeepPartial<User>
     transientParams.foo; // Property 'foo' does not exist on type 'Partial<UserTransientParams>'
     associations.bar; // Property 'bar' does not exist on type 'Partial<User>'
@@ -262,10 +295,30 @@ export default Factory.define<User>(({ sequence, afterBuild }) => {
 });
 ```
 
+### On-create hook
+
+You can instruct factories to chain promises together when creating an object.
+This allows you to perform asynchronous actions when building models such as
+creating the model on a server.
+
+```typescript
+export default Factory.define<User>(({ sequence, onCreate }) => {
+  onCreate(user => {
+    return apiService.create(user);
+  });
+
+  return {
+    id: sequence,
+    name: 'Bob',
+    posts: [],
+  };
+});
+```
+
 ### Extending factories
 
 Factories can easily be extended using the extension methods: `params`,
-`transient`, `associations`, and `afterBuild`. These set default attributes that get passed to the factory on `build`:
+`transient`, `associations`, `afterBuild`, and `onCreate`. These set default attributes that get passed to the factory on `build`:
 
 ```typescript
 const userFactory = Factory.define<User>(() => ({
@@ -288,7 +341,8 @@ defaults.
 `afterBuild` just adds a function that is called when the object is built.
 The `afterBuild` defined in `Factory.define` is always called first if
 specified, and then any `afterBuild` functions defined with the extension
-method are called sequentially in the order they were added.
+method are called sequentially in the order they were added. The `onCreate`
+methods use the same order precedence.
 
 These extension methods can be called multiple times to continue extending
 factories, and they do not modify the original factory:
