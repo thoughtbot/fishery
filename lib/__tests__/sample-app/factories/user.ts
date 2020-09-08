@@ -13,7 +13,7 @@ const userFactory = Factory.define<User>(
     onCreate(user => {
       user.created = true;
       return Promise.resolve(user);
-    })
+    });
 
     return {
       id: `user-${sequence}`,

@@ -12,7 +12,7 @@ describe('Factory.build', () => {
 describe('Factory.create', () => {
   it('creates the object', async () => {
     const promise = factories.user.create({ name: 'susan' });
-    expect( promise ).toBeInstanceOf( Promise );
+    expect(promise).toBeInstanceOf(Promise);
 
     const user = await promise;
     expect(user.id).not.toBeNull();
