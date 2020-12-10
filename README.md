@@ -217,6 +217,8 @@ const userFactory = Factory.define<User, UserTransientParams>(
         canPost: registered,
       },
     };
+
+    return user;
   },
 );
 ```
