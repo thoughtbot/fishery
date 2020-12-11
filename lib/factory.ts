@@ -21,8 +21,7 @@ export class Factory<T, I = any> {
   ) {}
 
   /**
-   * Define a factory. This factory needs to be registered with
-   * `register` before use.
+   * Define a factory.
    * @template T The object the factory builds
    * @template I The transient parameters that your factory supports
    * @param generator - your factory function
