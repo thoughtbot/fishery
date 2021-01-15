@@ -97,6 +97,59 @@ describe('afterBuild', () => {
   });
 });
 
+describe('onCreate', () => {
+  it('defines a function that is called to create', async () => {
+    const onCreate = jest.fn(user => {
+      user.id = '123';
+      return Promise.resolve(user);
+    });
+    const user = await userFactory.onCreate(onCreate).create();
+    expect(user.id).toEqual('123');
+    expect(onCreate).toHaveBeenCalledWith(user);
+  });
+
+  it('calls chained or inherited onCreates sequentially', async () => {
+    const onCreate1 = jest.fn(user => {
+      user.id = 'a';
+      return Promise.resolve(user);
+    });
+    const onCreate2 = jest.fn(user => {
+      user.id = 'b';
+      return Promise.resolve(user);
+    });
+
+    const user = await userFactory
+      .onCreate(onCreate1)
+      .onCreate(onCreate2)
+      .create();
+    expect(user.id).toEqual('b');
+    expect(onCreate1).toHaveBeenCalledTimes(1);
+    expect(onCreate2).toHaveBeenCalledTimes(1);
+  });
+
+  it('calls onCreate from the generator function before those later defined by builder', async () => {
+    const onCreateGenerator = jest.fn(user => {
+      user.id = 'generator';
+      return Promise.resolve(user);
+    });
+    const onCreateBuilder = jest.fn(user => {
+      user.id = 'builder';
+      return Promise.resolve(user);
+    });
+
+    type User = { id: string };
+    const userFactory = Factory.define<User>(({ onCreate }) => {
+      onCreate(onCreateGenerator);
+      return { id: '1' };
+    });
+
+    const user = await userFactory.onCreate(onCreateBuilder).create();
+    expect(user.id).toEqual('builder');
+    expect(onCreateGenerator).toHaveBeenCalledTimes(1);
+    expect(onCreateBuilder).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('associations', () => {
   it('adds associations that are then used for build', () => {
     const user = userFactory.associations({ post: { id: '2' } }).build();

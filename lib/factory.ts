@@ -4,6 +4,7 @@ import {
   BuildOptions,
   GeneratorFnOptions,
   HookFn,
+  CreateFn,
 } from './types';
 import { FactoryBuilder } from './builder';
 
@@ -12,6 +13,7 @@ const SEQUENCE_START_VALUE = 1;
 export class Factory<T, I = any> {
   private nextId: number = SEQUENCE_START_VALUE;
   private _afterBuilds: HookFn<T>[] = [];
+  private _onCreates: CreateFn<T>[] = [];
   private _associations: Partial<T> = {};
   private _params: DeepPartial<T> = {};
   private _transient: Partial<I> = {};
@@ -24,6 +26,7 @@ export class Factory<T, I = any> {
    * Define a factory.
    * @template T The object the factory builds
    * @template I The transient parameters that your factory supports
+   * @template C The class of the factory object being created.
    * @param generator - your factory function
    */
   static define<T, I = any, C = Factory<T, I>>(
@@ -39,14 +42,7 @@ export class Factory<T, I = any> {
    * @param options
    */
   build(params: DeepPartial<T> = {}, options: BuildOptions<T, I> = {}): T {
-    return new FactoryBuilder<T, I>(
-      this.generator,
-      this.sequence(),
-      { ...this._params, ...params },
-      { ...this._transient, ...options.transient },
-      { ...this._associations, ...options.associations },
-      this._afterBuilds,
-    ).build();
+    return this.builder(params, options).build();
   }
 
   buildList(
@@ -63,6 +59,31 @@ export class Factory<T, I = any> {
   }
 
   /**
+   * Asynchronously create an object using your factory.
+   * @param params
+   * @param options
+   */
+  async create(
+    params: DeepPartial<T> = {},
+    options: BuildOptions<T, I> = {},
+  ): Promise<T> {
+    return this.builder(params, options).create();
+  }
+
+  async createList(
+    number: number,
+    params: DeepPartial<T> = {},
+    options: BuildOptions<T, I> = {},
+  ): Promise<T[]> {
+    let list: Promise<T>[] = [];
+    for (let i = 0; i < number; i++) {
+      list.push(this.create(params, options));
+    }
+
+    return Promise.all(list);
+  }
+
+  /**
    * Extend the factory by adding a function to be called after an object is built.
    * @param afterBuildFn - the function to call. It accepts your object of type T. The value this function returns gets returned from "build"
    * @returns a new factory
@@ -70,6 +91,17 @@ export class Factory<T, I = any> {
   afterBuild(afterBuildFn: HookFn<T>): this {
     const factory = this.clone();
     factory._afterBuilds.push(afterBuildFn);
+    return factory;
+  }
+
+  /**
+   * Extend the factory by adding a function to be called on creation.
+   * @param onCreateFn - The function to call. IT accepts your object of type T. The value this function returns gets returned from "create"
+   * @return a new factory
+   */
+  onCreate(onCreateFn: CreateFn<T>): this {
+    const factory = this.clone();
+    factory._onCreates.push(onCreateFn);
     return factory;
   }
 
@@ -123,5 +155,20 @@ export class Factory<T, I = any> {
 
   protected sequence() {
     return this.nextId++;
+  }
+
+  protected builder(
+    params: DeepPartial<T> = {},
+    options: BuildOptions<T, I> = {},
+  ) {
+    return new FactoryBuilder<T, I>(
+      this.generator,
+      this.sequence(),
+      { ...this._params, ...params },
+      { ...this._transient, ...options.transient },
+      { ...this._associations, ...options.associations },
+      this._afterBuilds,
+      this._onCreates,
+    );
   }
 }

@@ -1,4 +1,10 @@
-import { GeneratorFn, HookFn, GeneratorFnOptions, DeepPartial } from './types';
+import {
+  GeneratorFn,
+  HookFn,
+  GeneratorFnOptions,
+  DeepPartial,
+  CreateFn,
+} from './types';
 import mergeWith from 'lodash.mergewith';
 
 export class FactoryBuilder<T, I> {
@@ -9,12 +15,14 @@ export class FactoryBuilder<T, I> {
     private transientParams: Partial<I>,
     private associations: Partial<T>,
     private afterBuilds: HookFn<T>[],
+    private onCreates: CreateFn<T>[],
   ) {}
 
   build() {
     const generatorOptions: GeneratorFnOptions<T, I> = {
       sequence: this.sequence,
       afterBuild: this.setAfterBuild,
+      onCreate: this.setOnCreate,
       params: this.params,
       associations: this.associations,
       transientParams: this.transientParams,
@@ -26,8 +34,17 @@ export class FactoryBuilder<T, I> {
     return object;
   }
 
+  async create() {
+    const object = this.build();
+    return this._callOnCreates(object);
+  }
+
   setAfterBuild = (hook: HookFn<T>) => {
     this.afterBuilds = [hook, ...this.afterBuilds];
+  };
+
+  setOnCreate = (hook: CreateFn<T>) => {
+    this.onCreates = [hook, ...this.onCreates];
   };
 
   // merge params and associations into object. The only reason 'associations'
@@ -46,6 +63,20 @@ export class FactoryBuilder<T, I> {
         throw new Error('"afterBuild" must be a function');
       }
     });
+  }
+
+  _callOnCreates(object: T): Promise<T> {
+    const created = Promise.resolve(object);
+
+    this.onCreates.forEach(onCreate => {
+      if (typeof onCreate === 'function') {
+        created.then(onCreate);
+      } else {
+        throw new Error('"onCreate" must be a function');
+      }
+    });
+
+    return created;
   }
 }
 
