@@ -80,31 +80,16 @@ user.address.city; // El Paso
 user.address.state; // TX (from factory)
 ```
 
-### Create objects with your factories
+### Asynchronously create objects with your factories
+
+In some cases, you might want to perform an asynchronous operation when building objects, such as saving an object to the database. This can be done by calling `create` instead of `build`:
 
 ```typescript
-const user = await userFactory.create({ name: 'Sandra' });
+const user = await userFactory.create({ name: 'Maria' });
+user.name; // Maria
 ```
 
-Pass the same parameters to `create` as you would to `build` and receive a promise
-that resolves to the built object. Any defined handlers will be chained together to
-build the final promise.
-
-```typescript
-// my-test.test.ts
-import { factories } from './factories';
-
-factories.user
-  .create({
-    name: 'Susan',
-    address: { city: 'El Paso' },
-  })
-  .then(user => {
-    user.name; // Susan
-    user.address.city; // El Paso
-    user.address.state; // TX (from factory)
-  });
-```
+`create` returns a promise instead of the object itself but otherwise has the same API as `build`. The action that occurs when calling `create` can be specified in your factory's `onCreate` method as [described below](#on-create-hook).
 
 ## Documentation
 
