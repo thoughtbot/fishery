@@ -28,20 +28,23 @@ class UserFactory extends Factory<User, TransientParams> {
   }
 }
 
-const userFactory = UserFactory.define(({ associations, transientParams }) => {
-  const { registered = false } = transientParams;
-  const memberId = registered ? '1' : null;
+let userFactory: UserFactory;
+beforeEach(() => {
+  userFactory = UserFactory.define(({ associations, transientParams }) => {
+    const { registered = false } = transientParams;
+    const memberId = registered ? '1' : null;
 
-  return {
-    id: '1',
-    admin: false,
-    adminId: null,
-    firstName: 'Yussef',
-    lastName: 'Sanchez',
-    registered,
-    memberId,
-    post: associations.post || postFactory.build(),
-  };
+    return {
+      id: '1',
+      admin: false,
+      adminId: null,
+      firstName: 'Yussef',
+      lastName: 'Sanchez',
+      registered,
+      memberId,
+      post: associations.post || postFactory.build(),
+    };
+  });
 });
 
 describe('afterBuild', () => {
@@ -106,6 +109,47 @@ describe('onCreate', () => {
     const user = await userFactory.onCreate(onCreate).create();
     expect(user.id).toEqual('123');
     expect(onCreate).toHaveBeenCalledWith(user);
+  });
+
+  it('accepts async functions as onCreate hooks', async () => {
+    const onCreate = jest.fn(async (user) => {
+      user.id = await Promise.resolve('123');
+      return user;
+    });
+    const user = await userFactory.onCreate(onCreate).create();
+    expect(user.id).toEqual('123');
+    expect(onCreate).toHaveBeenCalledWith(user);
+  });
+
+  it('chains return values from onCreate hooks', async () => {
+    const onCreate1 = jest.fn(user => {
+      const newUser = userFactory.build({ firstName: 'new' }); // Typically, this would be the return value of some DB insertion
+      return Promise.resolve(newUser);
+    });
+
+    const onCreate2 = jest.fn(user => {
+      user.lastName = 'object';
+      return Promise.resolve(user);
+    });
+    const user = await userFactory
+      .onCreate(onCreate1)
+      .onCreate(onCreate2)
+      .create();
+    expect(user.firstName).toEqual('new');
+    expect(user.lastName).toEqual('object');
+  });
+
+  it('catches rejections from onCreate hooks', async () => {
+    const onCreate = jest.fn(user => {
+      user.id = '123';
+      return Promise.reject(user);
+    });
+    try {
+      const user = await userFactory.onCreate(onCreate).create();
+      expect(false).toBe(true); // expected promise to reject
+    } catch (user) {
+      expect(user.id).toEqual('123');
+    }
   });
 
   it('calls chained or inherited onCreates sequentially', async () => {

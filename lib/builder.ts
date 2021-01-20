@@ -65,18 +65,15 @@ export class FactoryBuilder<T, I> {
     });
   }
 
-  _callOnCreates(object: T): Promise<T> {
-    const created = Promise.resolve(object);
-
-    this.onCreates.forEach(onCreate => {
+  async _callOnCreates(object: T): Promise<T> {
+    for (const onCreate of this.onCreates) {
       if (typeof onCreate === 'function') {
-        created.then(onCreate);
+        object = await onCreate(object);
       } else {
         throw new Error('"onCreate" must be a function');
       }
-    });
-
-    return created;
+    }
+    return object;
   }
 }
 
