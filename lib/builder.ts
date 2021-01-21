@@ -66,11 +66,11 @@ export class FactoryBuilder<T, I> {
   }
 
   _callOnCreates(object: T): Promise<T> {
-    const created = Promise.resolve(object);
+    let created = Promise.resolve(object);
 
     this.onCreates.forEach(onCreate => {
       if (typeof onCreate === 'function') {
-        created.then(onCreate);
+        created = created.then(onCreate);
       } else {
         throw new Error('"onCreate" must be a function');
       }
