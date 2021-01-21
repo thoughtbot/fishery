@@ -150,6 +150,8 @@ export class Factory<T, I = any> {
       new (generator: GeneratorFn<T, I>): C;
     })(this.generator);
     Object.assign(copy, this);
+    copy._onCreates = [...this._onCreates];
+    copy._afterBuilds = [...this._afterBuilds];
     return copy;
   }
 

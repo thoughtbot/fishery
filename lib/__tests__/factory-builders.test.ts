@@ -95,6 +95,17 @@ describe('afterBuild', () => {
     expect(afterBuildGenerator).toHaveBeenCalledTimes(1);
     expect(afterBuildBuilder).toHaveBeenCalledTimes(1);
   });
+
+  it('does not modify the original factory', async () => {
+    const afterBuild = (user: User) => {
+      user.id = 'afterBuild';
+      return user;
+    };
+
+    userFactory.afterBuild(afterBuild);
+    const user = userFactory.build();
+    expect(user.id).toEqual('1');
+  });
 });
 
 describe('onCreate', () => {
@@ -147,6 +158,17 @@ describe('onCreate', () => {
     expect(user.id).toEqual('builder');
     expect(onCreateGenerator).toHaveBeenCalledTimes(1);
     expect(onCreateBuilder).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not modify the original factory', async () => {
+    const onCreate = (user: User) => {
+      user.id = 'onCreate';
+      return Promise.resolve(user);
+    };
+
+    userFactory.onCreate(onCreate);
+    const user = await userFactory.create();
+    expect(user.id).toEqual('1');
   });
 
   it('chains return values from onCreate hooks', async () => {
