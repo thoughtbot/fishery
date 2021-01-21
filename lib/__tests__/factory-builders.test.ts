@@ -148,6 +148,32 @@ describe('onCreate', () => {
     expect(onCreateGenerator).toHaveBeenCalledTimes(1);
     expect(onCreateBuilder).toHaveBeenCalledTimes(1);
   });
+
+  it('chains return values from onCreate hooks', async () => {
+    const onCreate1 = jest.fn(async user => {
+      return Promise.resolve(userFactory.build({ id: 'onCreate1' }));
+    });
+    const onCreate2 = jest.fn(async user => {
+      user.firstName = 'onCreate2';
+      return Promise.resolve(user);
+    });
+    const user = await userFactory
+      .onCreate(onCreate1)
+      .onCreate(onCreate2)
+      .create();
+    expect(user.id).toEqual('onCreate1');
+    expect(user.firstName).toEqual('onCreate2');
+  });
+
+  it('rejections are handled', async () => {
+    const onCreate = jest.fn(async user => {
+      user.id = 'rejection';
+      return Promise.reject(user);
+    });
+    await expect(
+      userFactory.onCreate(onCreate).create(),
+    ).rejects.toMatchObject({ id: 'rejection' });
+  });
 });
 
 describe('associations', () => {
