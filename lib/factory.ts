@@ -11,7 +11,9 @@ import { FactoryBuilder } from './builder';
 const SEQUENCE_START_VALUE = 1;
 
 export class Factory<T, I = any> {
-  private nextId: number = SEQUENCE_START_VALUE;
+  // id is an object so it is shared between extended factories
+  private id: { value: number } = { value: SEQUENCE_START_VALUE };
+
   private _afterBuilds: HookFn<T>[] = [];
   private _onCreates: CreateFn<T>[] = [];
   private _associations: Partial<T> = {};
@@ -142,7 +144,7 @@ export class Factory<T, I = any> {
    * Sets sequence back to its default value
    */
   rewindSequence() {
-    this.nextId = SEQUENCE_START_VALUE;
+    this.id.value = SEQUENCE_START_VALUE;
   }
 
   protected clone<C extends Factory<T, I>>(this: C): C {
@@ -156,7 +158,7 @@ export class Factory<T, I = any> {
   }
 
   protected sequence() {
-    return this.nextId++;
+    return this.id.value++;
   }
 
   protected builder(
