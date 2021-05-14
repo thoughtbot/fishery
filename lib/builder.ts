@@ -6,6 +6,7 @@ import {
   CreateFn,
 } from './types';
 import mergeWith from 'lodash.mergewith';
+import { merge, mergeCustomizer } from './merge';
 
 export class FactoryBuilder<T, I> {
   constructor(
@@ -52,7 +53,7 @@ export class FactoryBuilder<T, I> {
   // vs DeepPartial<T>) so can do the following in a factory:
   // `user: associations.user || userFactory.build()`
   _mergeParamsOntoObject(object: T) {
-    mergeWith(object, this.params, this.associations, mergeCustomizer);
+    merge(object, this.params, this.associations, mergeCustomizer);
   }
 
   _callAfterBuilds(object: T) {
@@ -79,9 +80,3 @@ export class FactoryBuilder<T, I> {
     return created;
   }
 }
-
-const mergeCustomizer = (_object: any, srcVal: any) => {
-  if (Array.isArray(srcVal)) {
-    return srcVal;
-  }
-};

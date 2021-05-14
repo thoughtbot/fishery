@@ -7,6 +7,7 @@ import {
   CreateFn,
 } from './types';
 import { FactoryBuilder } from './builder';
+import { merge, mergeCustomizer } from './merge';
 
 const SEQUENCE_START_VALUE = 1;
 
@@ -125,7 +126,7 @@ export class Factory<T, I = any> {
    */
   params(params: DeepPartial<T>): this {
     const factory = this.clone();
-    factory._params = { ...this._params, ...params };
+    factory._params = merge({}, this._params, params, mergeCustomizer);
     return factory;
   }
 
@@ -168,7 +169,7 @@ export class Factory<T, I = any> {
     return new FactoryBuilder<T, I>(
       this.generator,
       this.sequence(),
-      { ...this._params, ...params },
+      merge({}, this._params, params, mergeCustomizer),
       { ...this._transient, ...options.transient },
       { ...this._associations, ...options.associations },
       this._afterBuilds,
