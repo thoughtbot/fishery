@@ -16,13 +16,13 @@ just without the extra typechecking that comes with TypeScript.
 Install fishery with:
 
 ```
-npm install --save fishery
+npm install --save-dev fishery
 ```
 
 or
 
 ```
-yarn add fishery
+yarn add --dev fishery
 ```
 
 ## Usage
