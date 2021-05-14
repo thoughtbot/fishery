@@ -155,6 +155,45 @@ describe('onCreate', () => {
 });
 
 describe('merging params', () => {
+  describe('nested objects', () => {
+    type User = {
+      attributes: {
+        registered: boolean;
+        admin?: boolean;
+      };
+    };
+
+    it('preserves nested objects when merging trait-supplied params with build()-supplied', () => {
+      const userFactory = Factory.define<User>(() => ({
+        attributes: { registered: true },
+      }));
+
+      const user = userFactory
+        .params({ attributes: { admin: true } })
+        .build({ attributes: { registered: false } });
+
+      expect(user.attributes).toMatchObject({
+        admin: true,
+        registered: false,
+      });
+    });
+
+    it('preserves nested objects when merging trait-supplied params into each other', () => {
+      const userFactory = Factory.define<User>(() => ({
+        attributes: { registered: true },
+      }));
+      const user = userFactory
+        .params({ attributes: { admin: true } })
+        .params({ attributes: { registered: false } })
+        .build({ attributes: { registered: false } });
+
+      expect(user.attributes).toMatchObject({
+        admin: true,
+        registered: false,
+      });
+    });
+  });
+
   describe('factory.tuples', () => {
     const tupleFactory = Factory.define<{ items: [string] }>(() => ({
       items: ['STRING'],
