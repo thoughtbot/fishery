@@ -34,7 +34,11 @@ describe('factory.build', () => {
   });
 
   it('builds the object for optional keys', () => {
-    const user = userFactory.build({ name: 'susan', age: 40, email: 'person@example.com' });
+    const user = userFactory.build({
+      name: 'susan',
+      age: 40,
+      email: 'person@example.com',
+    });
     expect(user.age).toBe(40);
     expect(user.email).toBe('person@example.com');
   });
