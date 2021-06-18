@@ -3,6 +3,8 @@ import { CreateFn, Factory, HookFn } from 'fishery';
 type User = {
   id: string;
   name: string;
+  age?: number;
+  email?: string | null;
   address?: { city: string; state: string };
 };
 
@@ -24,6 +26,22 @@ describe('factory.build', () => {
     expect(user.id).not.toBeNull();
     expect(user.name).toEqual('susan');
     expect(user.address?.state).toEqual('MI');
+  });
+
+  it('builds the object for optional undefined keys', () => {
+    const user = userFactory.build({ name: 'susan', age: undefined });
+    expect(user.age).toBeUndefined();
+  });
+
+  it('builds the object for optional keys', () => {
+    const user = userFactory.build({ name: 'susan', age: 40, email: 'person@example.com' });
+    expect(user.age).toBe(40);
+    expect(user.email).toBe('person@example.com');
+  });
+
+  it('builds the object for optional null keys', () => {
+    const user = userFactory.build({ name: 'susan', email: null });
+    expect(user.email).toBeNull();
   });
 
   it('accepts partials of nested objects', () => {
