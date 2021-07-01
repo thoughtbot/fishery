@@ -5,6 +5,7 @@ import {
   GeneratorFnOptions,
   HookFn,
   CreateFn,
+  BulkCreateFn,
 } from './types';
 import { FactoryBuilder } from './builder';
 import { merge, mergeCustomizer } from './merge';
@@ -20,6 +21,7 @@ export class Factory<T, I = any> {
   private _associations: Partial<T> = {};
   private _params: DeepPartial<T> = {};
   private _transient: Partial<I> = {};
+  private _onBulkCreates: BulkCreateFn<T>[] = [];
 
   constructor(
     private readonly generator: (opts: GeneratorFnOptions<T, I>) => T,
@@ -84,6 +86,35 @@ export class Factory<T, I = any> {
     }
 
     return Promise.all(list);
+  }
+
+  _callOnBulkCreates(object: T[]): Promise<T[]> {
+    let created = Promise.resolve(object);
+
+    this._onBulkCreates.forEach(onBulkCreate => {
+      if (typeof onBulkCreate === 'function') {
+        created = created.then(onBulkCreate);
+      } else {
+        throw new Error('"onBulkCreate" must be a function');
+      }
+    });
+    
+    return created;
+  }
+
+  async bulkCreateList(
+    number: number,
+    params: DeepPartial<T> = {},
+    options: BuildOptions<T, I> = {},
+  ): Promise<T[]> {
+    const list = this.buildList(number, params, options);
+    return this._callOnBulkCreates(list);
+  }
+
+  onBulkCreate(onBulkCreateFn: BulkCreateFn<T>): this {
+    const factory = this.clone();
+    factory._onBulkCreates.push(onBulkCreateFn);
+    return factory;
   }
 
   /**
@@ -174,6 +205,7 @@ export class Factory<T, I = any> {
       { ...this._associations, ...options.associations },
       this._afterBuilds,
       this._onCreates,
+      this._onBulkCreates,
     );
   }
 }
