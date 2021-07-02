@@ -4,8 +4,14 @@ type User = {
   id: string;
   name: string;
   age?: number;
+  isMajor?: boolean;
   email?: string | null;
   address?: { city: string; state: string };
+};
+
+type Device = {
+  platform: string;
+  isTablet: boolean | null;
 };
 
 const userFactory = Factory.define<User>(({ sequence }) => {
@@ -13,10 +19,18 @@ const userFactory = Factory.define<User>(({ sequence }) => {
   return {
     id: `user-${sequence}`,
     name,
+    isMajor: false,
     address: {
       city: 'Detroit',
       state: 'MI',
     },
+  };
+});
+
+const deviceFactory = Factory.define<Device>(() => {
+  return {
+    platform: 'iOS',
+    isTablet: null,
   };
 });
 
@@ -31,6 +45,16 @@ describe('factory.build', () => {
   it('builds the object for optional undefined keys', () => {
     const user = userFactory.build({ name: 'susan', age: undefined });
     expect(user.age).toBeUndefined();
+  });
+
+  it('builds the object when existing false keys are overridden', () => {
+    const user = userFactory.build({ name: 'susan', isMajor: undefined });
+    expect(user.isMajor).toBeUndefined();
+  });
+
+  it('builds the object when existing null keys are overridden', () => {
+    const device = deviceFactory.build({ isTablet: undefined });
+    expect(device.isTablet).toBeUndefined();
   });
 
   it('builds the object for optional keys', () => {
