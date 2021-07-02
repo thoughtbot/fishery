@@ -19,9 +19,10 @@
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "test": "jest",
+    "test:all": "yarn test && yarn pretty:check",
     "testinit": "jest --init",
     "pretty": "prettier --write '{*,.*,lib/**/*}.{ts,json,md}'",
-    "verifyPretty": "prettier --check '{*,.*,lib/**/*}.{ts,json,md}'"
+    "pretty:check": "prettier --check '{*,.*,lib/**/*}.{ts,json,md}'"
   },
   "repository": {
     "type": "git",
