@@ -4,7 +4,6 @@ import {
   GeneratorFnOptions,
   DeepPartial,
   CreateFn,
-  BulkCreateFn,
 } from './types';
 import mergeWith from 'lodash.mergewith';
 import { merge, mergeCustomizer } from './merge';
@@ -18,7 +17,6 @@ export class FactoryBuilder<T, I> {
     private associations: Partial<T>,
     private afterBuilds: HookFn<T>[],
     private onCreates: CreateFn<T>[],
-    private onBulkCreates: BulkCreateFn<T>[],
   ) {}
 
   build() {
@@ -26,7 +24,6 @@ export class FactoryBuilder<T, I> {
       sequence: this.sequence,
       afterBuild: this.setAfterBuild,
       onCreate: this.setOnCreate,
-      onBulkCreate: this.setOnBulkCreate,
       params: this.params,
       associations: this.associations,
       transientParams: this.transientParams,
@@ -50,10 +47,6 @@ export class FactoryBuilder<T, I> {
   setOnCreate = (hook: CreateFn<T>) => {
     this.onCreates = [hook, ...this.onCreates];
   };
-
-  setOnBulkCreate = (hook: BulkCreateFn<T>) => {
-    this.onBulkCreates = [hook, ...this.onBulkCreates];
-  }
 
   // merge params and associations into object. The only reason 'associations'
   // is separated is because it is typed differently from `params` (Partial<T>

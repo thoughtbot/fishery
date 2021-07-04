@@ -96,6 +96,40 @@ describe('factory.createList', () => {
     expect(users.every(u => u.name === 'Bill')).toBeTruthy();
     expect(onCreateFn).toHaveBeenCalledTimes(2);
   });
+
+  it('calls onBulkCreate function if bulkCreate value passed true in options', async () => {
+    const onBulkCreateFn = jest.fn(async users => {
+      users.every((user: { name: string; }) => user.name = 'Bill')
+      return Promise.resolve(users);
+    });
+
+    const bulkUserFactory = userFactory.onBulkCreate(onBulkCreateFn);
+
+    const promise = bulkUserFactory.createList(2, { name: 'susan' }, { bulkCreate: true });
+    expect(promise).toBeInstanceOf(Promise);
+
+    const users = await promise;
+
+    expect(users.every(u => u.name === 'Bill')).toBeTruthy();
+    expect(onBulkCreateFn).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not calls onBulkCreate function if bulkCreate value passed false in options', async () => {
+    const onBulkCreateFn = jest.fn(async users => {
+      users.every((user: { name: string; }) => user.name = 'Bill')
+      return Promise.resolve(users);
+    });
+
+    const bulkUserFactory = userFactory.onBulkCreate(onBulkCreateFn);
+
+    const promise = bulkUserFactory.createList(2, { name: 'susan' }, { bulkCreate: false });
+    expect(promise).toBeInstanceOf(Promise);
+
+    const users = await promise;
+    
+    expect(users.every(u => u.name === 'susan')).toBeTruthy();
+    expect(onBulkCreateFn).toHaveBeenCalledTimes(0);
+  });
 });
 
 describe('afterBuild', () => {
@@ -148,6 +182,35 @@ describe('onCreate', () => {
       });
 
       return expect(factory.create()).rejects.toThrowError(
+        /must be a function/,
+      );
+    });
+  });
+});
+
+describe('onBulkCreate', () => {
+  it('passes the object for manipulation', async () => {
+    const onBulkCreateFn = jest.fn(async users => {
+      users.every((user: { name: string; }) => user.name = 'Bill')
+      return Promise.resolve(users);
+    });
+
+    const bulkUserFactory = userFactory.onBulkCreate(onBulkCreateFn);
+
+    const promise = bulkUserFactory.createList(2, { name: 'susan' }, { bulkCreate: true });
+    expect(promise).toBeInstanceOf(Promise);
+
+    const users = await promise;
+
+    expect(users.every(u => u.name === 'Bill')).toBeTruthy();
+    expect(onBulkCreateFn).toHaveBeenCalledTimes(1);
+  });
+
+  describe('when not a function', () => {
+    it('raises an error', () => {
+      const bulkUserFactory = userFactory.onBulkCreate(('5' as unknown) as CreateFn<User[]>);
+
+      return expect(bulkUserFactory.createList(2, {}, { bulkCreate: true })).rejects.toThrowError(
         /must be a function/,
       );
     });

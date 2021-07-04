@@ -5,7 +5,6 @@ import {
   GeneratorFnOptions,
   HookFn,
   CreateFn,
-  BulkCreateFn,
 } from './types';
 import { FactoryBuilder } from './builder';
 import { merge, mergeCustomizer } from './merge';
@@ -18,10 +17,10 @@ export class Factory<T, I = any> {
 
   private _afterBuilds: HookFn<T>[] = [];
   private _onCreates: CreateFn<T>[] = [];
+  private _onBulkCreates: CreateFn<T[]>[] = [];
   private _associations: Partial<T> = {};
   private _params: DeepPartial<T> = {};
   private _transient: Partial<I> = {};
-  private _onBulkCreates: BulkCreateFn<T>[] = [];
 
   constructor(
     private readonly generator: (opts: GeneratorFnOptions<T, I>) => T,
@@ -80,16 +79,21 @@ export class Factory<T, I = any> {
     params: DeepPartial<T> = {},
     options: BuildOptions<T, I> = {},
   ): Promise<T[]> {
-    let list: Promise<T>[] = [];
-    for (let i = 0; i < number; i++) {
-      list.push(this.create(params, options));
-    }
+    if (options.bulkCreate) {
+      const objects = this.buildList(number, params, options);
+      return this._callOnBulkCreates(objects)
+    } else  {
+      let list: Promise<T>[] = [];
+      for (let i = 0; i < number; i++) {
+        list.push(this.create(params, options));
+      }
 
-    return Promise.all(list);
+      return Promise.all(list);
+    }
   }
 
-  _callOnBulkCreates(object: T[]): Promise<T[]> {
-    let created = Promise.resolve(object);
+  _callOnBulkCreates(objects: T[]): Promise<T[]> {
+    let created = Promise.resolve(objects);
 
     this._onBulkCreates.forEach(onBulkCreate => {
       if (typeof onBulkCreate === 'function') {
@@ -98,23 +102,8 @@ export class Factory<T, I = any> {
         throw new Error('"onBulkCreate" must be a function');
       }
     });
-    
+
     return created;
-  }
-
-  async bulkCreateList(
-    number: number,
-    params: DeepPartial<T> = {},
-    options: BuildOptions<T, I> = {},
-  ): Promise<T[]> {
-    const list = this.buildList(number, params, options);
-    return this._callOnBulkCreates(list);
-  }
-
-  onBulkCreate(onBulkCreateFn: BulkCreateFn<T>): this {
-    const factory = this.clone();
-    factory._onBulkCreates.push(onBulkCreateFn);
-    return factory;
   }
 
   /**
@@ -136,6 +125,19 @@ export class Factory<T, I = any> {
   onCreate(onCreateFn: CreateFn<T>): this {
     const factory = this.clone();
     factory._onCreates.push(onCreateFn);
+    return factory;
+  }
+
+  /**
+   * Extend the factory by adding a function to be called on bulk creation.
+   * @param onBulkCreateFn - The function to call. IT accepts array of object of type T.
+   * The value this function returns gets returned from "createList" when bulkCreate is true
+   * 
+   * @return a new factory
+   */
+  onBulkCreate(onBulkCreateFn: CreateFn<T[]>): this {
+    const factory = this.clone();
+    factory._onBulkCreates.push(onBulkCreateFn);
     return factory;
   }
 
@@ -205,7 +207,6 @@ export class Factory<T, I = any> {
       { ...this._associations, ...options.associations },
       this._afterBuilds,
       this._onCreates,
-      this._onBulkCreates,
     );
   }
 }
