@@ -20,4 +20,5 @@ export type CreateFn<T> = (object: T) => Promise<T>;
 export type BuildOptions<T, I> = {
   associations?: Partial<T>;
   transient?: Partial<I>;
+  bulkCreate?: boolean;
 };
