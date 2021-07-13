@@ -192,9 +192,9 @@ describe('onCreate', () => {
       user.id = 'rejection';
       return Promise.reject(user);
     });
-    await expect(
-      userFactory.onCreate(onCreate).create(),
-    ).rejects.toMatchObject({ id: 'rejection' });
+    await expect(userFactory.onCreate(onCreate).create()).rejects.toMatchObject(
+      { id: 'rejection' },
+    );
   });
 });
 

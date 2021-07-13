@@ -20,5 +20,5 @@ jobs:
             - ~/.cache/yarn
       - run:
           name: Check code formatting
-          command: yarn verifyPretty
+          command: yarn pretty:check
       - run: yarn test

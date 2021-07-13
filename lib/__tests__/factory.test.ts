@@ -165,7 +165,7 @@ describe('afterBuild', () => {
   describe('when not a function', () => {
     it('raises an error', () => {
       const factory = Factory.define<User>(({ afterBuild }) => {
-        afterBuild(('5' as unknown) as HookFn<User>);
+        afterBuild('5' as unknown as HookFn<User>);
         return { id: '1', name: 'Ralph' };
       });
 
@@ -194,7 +194,7 @@ describe('onCreate', () => {
   describe('when not a function', () => {
     it('raises an error', () => {
       const factory = Factory.define<User>(({ onCreate }) => {
-        onCreate(('5' as unknown) as CreateFn<User>);
+        onCreate('5' as unknown as CreateFn<User>);
         return { id: '1', name: 'Ralph' };
       });
 
