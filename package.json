@@ -12,12 +12,14 @@
     "test data"
   ],
   "main": "dist/index.js",
+  "umd:main": "dist/fishery.umd.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist/"
   ],
   "scripts": {
-    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json",
+    "build:umd": "microbundle --external none --name _fishery -f umd -i lib/index.ts",
     "test": "jest",
     "test:all": "yarn test && yarn pretty:check",
     "testinit": "jest --init",
@@ -54,6 +56,7 @@
     "@types/jest": "^26.0.20",
     "@types/lodash.mergewith": "^4.6.6",
     "jest": "^26.6.3",
+    "microbundle": "^0.13.3",
     "prettier": "^2.2.1",
     "ts-jest": "^26.4.4",
     "typescript": "^3.9.5"
