@@ -33,3 +33,11 @@ steps:
       targetPath: $(Build.ArtifactStagingDirectory)
       artifactName: package
   displayName: 'Publish artifacts'
+
+- task: Npm@1
+  inputs:
+    command: publish
+    publishRegistry: useFeed
+    publishFeed: OneTrack/vgl-npm
+  displayName: 'Publish to vgl-npm feed'
+
