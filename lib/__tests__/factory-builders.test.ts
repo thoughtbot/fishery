@@ -1,4 +1,5 @@
 import { Factory } from 'fishery';
+import { sleep } from './helpers/sleep';
 
 type Post = { id: string };
 type User = {
@@ -109,92 +110,153 @@ describe('afterBuild', () => {
 });
 
 describe('onCreate', () => {
-  it('defines a function that is called to create', async () => {
-    const onCreate = jest.fn(user => {
-      user.id = '123';
-      return Promise.resolve(user);
-    });
-    const user = await userFactory.onCreate(onCreate).create();
-    expect(user.id).toEqual('123');
-    expect(onCreate).toHaveBeenCalledWith(user);
-  });
+  it('defines a function that is called on create', async () => {
+    type User = { id: string };
+    const factory = Factory.define<User>(() => ({ id: '1' }));
 
-  it('calls chained or inherited onCreates sequentially', async () => {
-    const onCreate1 = jest.fn(user => {
-      user.id = 'a';
-      return Promise.resolve(user);
-    });
-    const onCreate2 = jest.fn(user => {
-      user.id = 'b';
-      return Promise.resolve(user);
-    });
-
-    const user = await userFactory
-      .onCreate(onCreate1)
-      .onCreate(onCreate2)
+    const user = await factory
+      .onCreate(user => {
+        user.id = 'bla';
+        return user;
+      })
       .create();
-    expect(user.id).toEqual('b');
-    expect(onCreate1).toHaveBeenCalledTimes(1);
-    expect(onCreate2).toHaveBeenCalledTimes(1);
+    expect(user.id).toEqual('bla');
   });
 
-  it('calls onCreate from the generator function before those later defined by builder', async () => {
-    const onCreateGenerator = jest.fn(user => {
+  it('overrides onCreate from the generator', async () => {
+    type User = { id: string };
+    const factory = Factory.define<User>(({ onCreate }) => {
+      onCreate(user => {
+        user.id = 'generator';
+        return user;
+      });
+
+      return { id: '1' };
+    });
+
+    const user = await factory
+      .onCreate(user => {
+        user.id = 'builder';
+        return user;
+      })
+      .create();
+    expect(user.id).toEqual('builder');
+  });
+
+  it('raises an error if onCreate was not defined', async () => {
+    type User = { id: string };
+    const factory = Factory.define<User>(() => ({ id: '1' }));
+
+    await expect(() => factory.create()).rejects.toHaveProperty(
+      'message',
+      'Attempted to call `create`, but no onCreate defined',
+    );
+  });
+});
+
+describe('afterCreate', () => {
+  it('defines a function that is called after the onCreate', async () => {
+    type User = { id: string };
+    const factory = Factory.define<User>(() => ({ id: '1' }));
+    const afterCreate = jest.fn(user => {
+      user.id = 'afterCreate';
+      return Promise.resolve(user);
+    });
+
+    const user = await factory
+      .onCreate(user => {
+        user.id = 'onCreate';
+        return user;
+      })
+      .afterCreate(afterCreate)
+      .create();
+
+    expect(user.id).toEqual('afterCreate');
+  });
+
+  it('calls chained or inherited afterCreates sequentially', async () => {
+    type User = { id: string };
+    const factory = Factory.define<User>(() => ({ id: '1' }));
+
+    const afterCreate1 = jest.fn(async user => {
+      user.id = 'afterCreate1';
+      sleep(10);
+      return user;
+    });
+
+    const afterCreate2 = jest.fn(user => {
+      user.id = 'afterCreate2';
+      return Promise.resolve(user);
+    });
+
+    const user = await factory
+      .onCreate(u => u)
+      .afterCreate(afterCreate1)
+      .afterCreate(afterCreate2)
+      .create();
+    expect(user.id).toEqual('afterCreate2');
+    expect(afterCreate1).toHaveBeenCalledTimes(1);
+    expect(afterCreate2).toHaveBeenCalledTimes(1);
+  });
+
+  it('calls afterCreate from the generator function before those later defined by builder', async () => {
+    const afterCreateGenerator = jest.fn(user => {
       user.id = 'generator';
       return Promise.resolve(user);
     });
-    const onCreateBuilder = jest.fn(user => {
+    const afterCreateBuilder = jest.fn(user => {
       user.id = 'builder';
       return Promise.resolve(user);
     });
 
     type User = { id: string };
-    const userFactory = Factory.define<User>(({ onCreate }) => {
-      onCreate(onCreateGenerator);
-      return { id: '1' };
+    const userFactory = Factory.define<User>(({ afterCreate, onCreate }) => {
+      onCreate(user => user);
+      afterCreate(afterCreateGenerator);
+      return { id: '1', name: '1' };
     });
 
-    const user = await userFactory.onCreate(onCreateBuilder).create();
+    const user = await userFactory.afterCreate(afterCreateBuilder).create();
     expect(user.id).toEqual('builder');
-    expect(onCreateGenerator).toHaveBeenCalledTimes(1);
-    expect(onCreateBuilder).toHaveBeenCalledTimes(1);
+    expect(afterCreateGenerator).toHaveBeenCalledTimes(1);
+    expect(afterCreateBuilder).toHaveBeenCalledTimes(1);
   });
 
-  it('does not modify the original factory', async () => {
-    const onCreate = (user: User) => {
-      user.id = 'onCreate';
-      return Promise.resolve(user);
-    };
+  it('chains return values from afterCreate hooks', async () => {
+    type User = { id: string };
+    const factory = Factory.define<User>(() => ({ id: '1' }));
 
-    userFactory.onCreate(onCreate);
-    const user = await userFactory.create();
-    expect(user.id).toEqual('1');
-  });
+    const afterCreate1 = jest.fn(async (user: User) => {
+      user.id = 'afterCreate1';
+      return user;
+    });
 
-  it('chains return values from onCreate hooks', async () => {
-    const onCreate1 = jest.fn(async user => {
-      return Promise.resolve(userFactory.build({ id: 'onCreate1' }));
+    const afterCreate2 = jest.fn(async user => {
+      user.id = 'afterCreate2';
+      return user;
     });
-    const onCreate2 = jest.fn(async user => {
-      user.firstName = 'onCreate2';
-      return Promise.resolve(user);
-    });
-    const user = await userFactory
-      .onCreate(onCreate1)
-      .onCreate(onCreate2)
+
+    const user = await factory
+      .onCreate(user => {
+        user.id = 'onCreate';
+        return user;
+      })
+      .afterCreate(afterCreate1)
+      .afterCreate(afterCreate2)
       .create();
-    expect(user.id).toEqual('onCreate1');
-    expect(user.firstName).toEqual('onCreate2');
+    expect(user.id).toEqual('afterCreate2');
   });
 
-  it('rejections are handled', async () => {
-    const onCreate = jest.fn(async user => {
-      user.id = 'rejection';
-      return Promise.reject(user);
+  it('rejects if afterCreate fails', async () => {
+    const afterCreate = jest.fn(async user => {
+      return Promise.reject('failed');
     });
-    await expect(userFactory.onCreate(onCreate).create()).rejects.toMatchObject(
-      { id: 'rejection' },
-    );
+    await expect(
+      userFactory
+        .onCreate(user => user)
+        .afterCreate(afterCreate)
+        .create(),
+    ).rejects.toEqual('failed');
   });
 });
 

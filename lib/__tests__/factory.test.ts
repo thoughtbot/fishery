@@ -1,4 +1,4 @@
-import { CreateFn, Factory, HookFn } from 'fishery';
+import { OnCreateFn, Factory, HookFn } from 'fishery';
 
 type User = {
   id: string;
@@ -6,7 +6,8 @@ type User = {
   address?: { city: string; state: string };
 };
 
-const userFactory = Factory.define<User>(({ sequence }) => {
+const userFactory = Factory.define<User>(({ onCreate, sequence }) => {
+  onCreate(user => user);
   const name = 'Bob';
   return {
     id: `user-${sequence}`,
@@ -64,6 +65,35 @@ describe('factory.create', () => {
     expect(user.id).not.toBeNull();
     expect(user.name).toEqual('susan');
     expect(user.address?.state).toEqual('MI');
+  });
+
+  it('returns the type specified by the third type parameter', async () => {
+    type UserBeforeSave = {
+      name: string;
+    };
+
+    type User = {
+      name: string;
+      id: number;
+    };
+
+    const factory = Factory.define<UserBeforeSave, any, User>(
+      ({ onCreate }) => {
+        onCreate(async user => {
+          return { ...user, id: 2 };
+        });
+
+        return { name: 'Ralph' };
+      },
+    );
+
+    const user = factory.build();
+    const user2 = await factory.create();
+
+    // @ts-expect-error
+    user.id;
+
+    expect(user2.id).toEqual(2);
   });
 });
 
@@ -126,30 +156,18 @@ describe('afterBuild', () => {
 });
 
 describe('onCreate', () => {
-  it('passes the object for manipulation', async () => {
+  it('defines a function that is called on create', async () => {
+    type User = { id: string };
     const factory = Factory.define<User>(({ onCreate }) => {
       onCreate(user => {
         user.id = 'bla';
         return Promise.resolve(user);
       });
 
-      return { id: '1', name: 'Ralph' };
+      return { id: '1' };
     });
 
     const user = await factory.create();
     expect(user.id).toEqual('bla');
-  });
-
-  describe('when not a function', () => {
-    it('raises an error', () => {
-      const factory = Factory.define<User>(({ onCreate }) => {
-        onCreate('5' as unknown as CreateFn<User>);
-        return { id: '1', name: 'Ralph' };
-      });
-
-      return expect(factory.create()).rejects.toThrowError(
-        /must be a function/,
-      );
-    });
   });
 });

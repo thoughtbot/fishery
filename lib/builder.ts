@@ -3,26 +3,28 @@ import {
   HookFn,
   GeneratorFnOptions,
   DeepPartial,
-  CreateFn,
+  OnCreateFn,
+  AfterCreateFn,
 } from './types';
-import mergeWith from 'lodash.mergewith';
 import { merge, mergeCustomizer } from './merge';
 
-export class FactoryBuilder<T, I> {
+export class FactoryBuilder<T, I, C> {
   constructor(
-    private generator: GeneratorFn<T, I>,
+    private generator: GeneratorFn<T, I, C>,
     private sequence: number,
     private params: DeepPartial<T>,
     private transientParams: Partial<I>,
     private associations: Partial<T>,
     private afterBuilds: HookFn<T>[],
-    private onCreates: CreateFn<T>[],
+    private afterCreates: AfterCreateFn<C>[],
+    private onCreate?: OnCreateFn<T, C>,
   ) {}
 
   build() {
-    const generatorOptions: GeneratorFnOptions<T, I> = {
+    const generatorOptions: GeneratorFnOptions<T, I, C> = {
       sequence: this.sequence,
       afterBuild: this.setAfterBuild,
+      afterCreate: this.setAfterCreate,
       onCreate: this.setOnCreate,
       params: this.params,
       associations: this.associations,
@@ -37,15 +39,22 @@ export class FactoryBuilder<T, I> {
 
   async create() {
     const object = this.build();
-    return this._callOnCreates(object);
+    const created = await this._callOnCreate(object);
+    return this._callAfterCreates(created);
   }
 
   setAfterBuild = (hook: HookFn<T>) => {
     this.afterBuilds = [hook, ...this.afterBuilds];
   };
 
-  setOnCreate = (hook: CreateFn<T>) => {
-    this.onCreates = [hook, ...this.onCreates];
+  setAfterCreate = (hook: AfterCreateFn<C>) => {
+    this.afterCreates = [hook, ...this.afterCreates];
+  };
+
+  setOnCreate = (hook: OnCreateFn<T, C>) => {
+    if (!this.onCreate) {
+      this.onCreate = hook;
+    }
   };
 
   // merge params and associations into object. The only reason 'associations'
@@ -66,16 +75,24 @@ export class FactoryBuilder<T, I> {
     });
   }
 
-  _callOnCreates(object: T): Promise<T> {
-    let created = Promise.resolve(object);
+  async _callOnCreate(object: T): Promise<C> {
+    if (!this.onCreate) {
+      throw new Error('Attempted to call `create`, but no onCreate defined');
+    }
 
-    this.onCreates.forEach(onCreate => {
-      if (typeof onCreate === 'function') {
-        created = created.then(onCreate);
+    return this.onCreate(object);
+  }
+
+  async _callAfterCreates(object: C): Promise<C> {
+    let created = object;
+
+    for (const afterCreate of this.afterCreates) {
+      if (typeof afterCreate === 'function') {
+        created = await afterCreate(created);
       } else {
-        throw new Error('"onCreate" must be a function');
+        throw new Error('"afterCreate" must be a function');
       }
-    });
+    }
 
     return created;
   }

@@ -6,17 +6,19 @@ export type DeepPartial<T> = {
     : DeepPartial<T[P]>;
 };
 
-export type GeneratorFnOptions<T, I> = {
+export type GeneratorFnOptions<T, I, C> = {
   sequence: number;
   afterBuild: (fn: HookFn<T>) => any;
-  onCreate: (fn: CreateFn<T>) => any;
+  afterCreate: (fn: AfterCreateFn<C>) => any;
+  onCreate: (fn: OnCreateFn<T, C>) => any;
   params: DeepPartial<T>;
   associations: Partial<T>;
   transientParams: Partial<I>;
 };
-export type GeneratorFn<T, I> = (opts: GeneratorFnOptions<T, I>) => T;
+export type GeneratorFn<T, I, C> = (opts: GeneratorFnOptions<T, I, C>) => T;
 export type HookFn<T> = (object: T) => any;
-export type CreateFn<T> = (object: T) => Promise<T>;
+export type OnCreateFn<T, C = T> = (object: T | C) => C | Promise<C>;
+export type AfterCreateFn<C> = (object: C) => C | Promise<C>;
 export type BuildOptions<T, I> = {
   associations?: Partial<T>;
   transient?: Partial<I>;
