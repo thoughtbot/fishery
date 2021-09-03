@@ -58,14 +58,6 @@ Pass parameters as the first argument to `build` to override your factory
 defaults. These parameters are deep-merged into the default object returned by
 your factory.
 
-`build` also supports a seconds argument with the following keys:
-
-- `transient`: data for use in your factory that doesn't get overlaid onto your
-  result object. More on this in the [Transient
-  Params](#params-that-dont-map-to-the-result-object-transient-params) section
-- `associations`: often not required but can be useful in order to short-circuit creating associations. More on this in the [Associations](#Associations)
-  section
-
 ```typescript
 // my-test.test.ts
 import { factories } from './factories';
@@ -89,7 +81,13 @@ const user = await userFactory.create({ name: 'Maria' });
 user.name; // Maria
 ```
 
-`create` returns a promise instead of the object itself but otherwise has the same API as `build`. The action that occurs when calling `create` can be specified in your factory's `onCreate` method as [described below](#on-create-hook).
+`create` returns a promise instead of the object itself but otherwise has the same API as `build`. The action that occurs when calling `create` is specified by defining an `onCreate` method on your factory as [described below](#on-create-hook).
+
+`create` can also return a different type from `build`. This type can be specified when defining your factory:
+
+```
+Factory.define<ReturnTypeOfBuild, TransientParamsType, ReturnTypeOfCreate>
+```
 
 ## Documentation
 
@@ -135,47 +133,15 @@ export default Factory.define<User, UserTransientParams>(
 );
 ```
 
-### Associations
+### `build` API
 
-Factories can import and reference other factories for associations:
+`build` supports a second argument with the following keys:
 
-```typescript
-import userFactory from './user';
-
-const postFactory = Factory.define<Post>(() => ({
-  title: 'My Blog Post',
-  author: userFactory.build(),
-}));
-```
-
-If you'd like to be able to pass in an association when building your object and
-short-circuit the call to `yourFactory.build()`, use the `associations`
-variable provided to your factory:
-
-```typescript
-const postFactory = Factory.define<Post>(({ associations }) => ({
-  title: 'My Blog Post',
-  author: associations.author || userFactory.build(),
-}));
-```
-
-Then build your object like this:
-
-```typescript
-const jordan = userFactory.build({ name: 'Jordan' });
-factories.post.build({}, { associations: { author: jordan } });
-```
-
-If two factories reference each other, they can usually import each other
-without issues, but TypeScript might require you to explicitly type your
-factory before exporting so it can determine the type before the circular
-references resolve:
-
-```typescript
-// the extra Factory<Post> typing can be necessary with circular imports
-const postFactory: Factory<Post> = Factory.define<Post>(() => ({ ...}));
-export default postFactory;
-```
+- `transient`: data for use in your factory that doesn't get overlaid onto your
+  result object. More on this in the [Transient
+  Params](#params-that-dont-map-to-the-result-object-transient-params) section
+- `associations`: often not required but can be useful in order to short-circuit creating associations. More on this in the [Associations](#Associations)
+  section
 
 ### Use `params` to access passed in properties
 
@@ -284,55 +250,90 @@ export default Factory.define<User>(({ sequence, afterBuild }) => {
 
 ### On-create hook
 
-You can instruct factories to chain promises together when creating an object.
-This allows you to perform asynchronous actions when building models such as
-creating the model on a server.
+Before using `create` to asynchronously create objects, an `onCreate` must be defined.
 
 ```typescript
-export default Factory.define<User>(({ sequence, onCreate }) => {
+const userFactory = Factory.define<User>(({ sequence, onCreate }) => {
   onCreate(user => {
     return apiService.create(user);
   });
 
   return {
-    id: sequence,
-    name: 'Bob',
-    posts: [],
+    name: 'Maria',
   };
 });
+
+const user = await userFactory.create();
+```
+
+### After-create hook
+
+Similar to `onCreate`, `afterCreate`s can also be defined. These are executed after the `onCreate`, and multiple can be defined for a given factory.
+
+```typescript
+const userFactory Factory.define<User, any, SavedUser>(
+  ({ sequence, onCreate, afterCreate }) => {
+    onCreate(user => {
+      return apiService.create(user);
+    });
+
+    afterCreate(async savedUser => savedUser);
+
+    return {
+      id: sequence,
+      name: 'Bob',
+      posts: [],
+    };
+  },
+);
+
+// can define additional afterCreates
+const savedUser = userFactory.afterCreate(async savedUser => savedUser).create()
 ```
 
 ### Extending factories
 
-Factories can easily be extended using the extension methods: `params`,
-`transient`, `associations`, `afterBuild`, and `onCreate`. These set default attributes that get passed to the factory on `build`:
+Factories can be extended using the extension methods: `params`, `transient`,
+`associations`, `afterBuild`, `afterCreate` and `onCreate`. These set default
+attributes that get passed to the factory on `build`. They return a new factory
+and do not modify the factory they are called on :
 
 ```typescript
 const userFactory = Factory.define<User>(() => ({
-  name: 'Kassandra',
   admin: false,
 }));
 
 const adminFactory = userFactory.params({ admin: true });
-const admin = adminFactory.build();
-admin.admin; // true
+adminFactory.build().admin; // true
+userFactory.build().admin; // false
 ```
 
-The extension methods return a new factory with the specified `params`,
-`transientParams`, `associations`, or `afterBuild` added to it and do not
-modify the factory they are called on. When `build` is called on the factory,
-the `params`, `transientParams`, and `associations` are passed in along with
-the values supplied to `build`. Values supplied to `build` override these
-defaults.
+`params`, `associations`, and `transient` behave in the same way as the arguments to `build`. The following are equivalent:
 
-`afterBuild` just adds a function that is called when the object is built.
-The `afterBuild` defined in `Factory.define` is always called first if
-specified, and then any `afterBuild` functions defined with the extension
-method are called sequentially in the order they were added. The `onCreate`
-methods use the same order precedence.
+```typescript
+const user = userFactory
+  .params({ admin: true })
+  .associations({ post: postFactory.build() })
+  .transient({ name: 'Jared' })
+  .build();
+
+const user2 = userFactory.build(
+  { admin: true },
+  {
+    associations: { post: postFactory.build() },
+    transient: { name: 'Jared' },
+  },
+);
+```
+
+Additionally, the following extension methods are available:
+
+- `afterBuild` - executed after an object is built. Multiple can be defined
+- `onCreate` - defines or replaces the behavior of `create()`. Must be defined prior to calling `create()`. Only one can be defined.
+- `afterCreate` - called after `onCreate()` before the object is returned from `create()`. Multiple can be defined
 
 These extension methods can be called multiple times to continue extending
-factories, and they do not modify the original factory:
+factories:
 
 ```typescript
 const eliFactory = userFactory
@@ -358,8 +359,7 @@ If you find yourself frequently building objects with a certain set of
 properties, it might be time to either extend the factory or create a
 reusable builder method.
 
-Factories are just classes, so adding reusable builder methods is as simple
-as subclassing `Factory` and defining any desired methods:
+Factories are just classes, so adding reusable builder methods can be achieved by subclassing `Factory` and defining any desired methods:
 
 ```typescript
 class UserFactory extends Factory<User, UserTransientParams> {
@@ -386,33 +386,56 @@ const user = userFactory.admin().registered().build()
 ```
 
 To learn more about the factory builder methods `params`, `transient`,
-`associations`, and `afterBuild`, see [Extending factories](#extending-factories), above.
+`associations`, `afterBuild`, `onCreate`, and `afterCreate`, see [Extending factories](#extending-factories), above.
+
+## Advanced
+
+### Associations
+
+Factories can import and reference other factories for associations:
+
+```typescript
+import userFactory from './user';
+
+const postFactory = Factory.define<Post>(() => ({
+  title: 'My Blog Post',
+  author: userFactory.build(),
+}));
+```
+
+If you'd like to be able to pass in an association when building your object and
+short-circuit the call to `yourFactory.build()`, use the `associations`
+variable provided to your factory:
+
+```typescript
+const postFactory = Factory.define<Post>(({ associations }) => ({
+  title: 'My Blog Post',
+  author: associations.author || userFactory.build(),
+}));
+```
+
+Then build your object like this:
+
+```typescript
+const jordan = userFactory.build({ name: 'Jordan' });
+factories.post.build({}, { associations: { author: jordan } });
+```
+
+If two factories reference each other, they can usually import each other
+without issues, but TypeScript might require you to explicitly type your
+factory before exporting so it can determine the type before the circular
+references resolve:
+
+```typescript
+// the extra Factory<Post> typing can be necessary with circular imports
+const postFactory: Factory<Post> = Factory.define<Post>(() => ({ ...}));
+export default postFactory;
+```
 
 ### Rewind Sequence
 
 A factory's sequence can be rewound with `rewindSequence()`.
 This sets the sequence back to its original starting value.
-
-Given the following factory
-
-```typescript
-export default Factory.define<User>(({ sequence }) => ({
-  email: `person${sequence}@example.com`,
-}));
-```
-
-You can rewind a factory's sequence at your discretion
-
-```typescript
-import { factories } from './factories';
-
-factories.user.build(); // { email: 'person1@example.com' }
-factories.user.build(); // { email: 'person2@example.com' }
-
-factories.user.rewindSequence();
-
-factories.user.build(); // { email: 'person1@example.com' }
-```
 
 ## Contributing
 
@@ -430,7 +453,7 @@ short. The Fishery is where things are built.
 
 ## License
 
-Fishery is Copyright © 2020 Stephen Hanson and thoughtbot. It is free
+Fishery is Copyright © 2021 Stephen Hanson and thoughtbot. It is free
 software, and may be redistributed under the terms specified in the
 [LICENSE](/LICENSE) file.
 
