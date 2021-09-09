@@ -211,6 +211,11 @@ describe('associations', () => {
 });
 
 describe('params', () => {
+  interface AdminUser extends User {
+    admin: true;
+    adminPrivileges: string[];
+  }
+
   it('adds parameters that are then used for build', () => {
     const user = userFactory.params({ admin: true }).build();
     expect(user.admin).toBe(true);
@@ -225,6 +230,38 @@ describe('params', () => {
     const adminFactory = userFactory.admin();
     expect(adminFactory.build().admin).toBe(true);
     expect(adminFactory.build().admin).toBe(true);
+  });
+
+  it('adds parameters for a sub-type which are then also accepted in build()', () => {
+    const adminFactory = userFactory.params<AdminUser>({
+      admin: true,
+      adminPrivileges: ['any-privilege'],
+    });
+
+    expect(adminFactory.build()).toEqual({
+      admin: true,
+      adminId: null,
+      adminPrivileges: ['any-privilege'],
+      firstName: 'Yussef',
+      id: '1',
+      lastName: 'Sanchez',
+      memberId: null,
+      post: { id: '1' },
+      registered: false,
+    });
+    expect(
+      adminFactory.build({ adminPrivileges: ['changed-privilege'] }),
+    ).toEqual({
+      admin: true,
+      adminId: null,
+      adminPrivileges: ['changed-privilege'],
+      firstName: 'Yussef',
+      id: '1',
+      lastName: 'Sanchez',
+      memberId: null,
+      post: { id: '1' },
+      registered: false,
+    });
   });
 });
 

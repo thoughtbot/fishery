@@ -124,10 +124,12 @@ export class Factory<T, I = any> {
    * @param params
    * @returns a new factory
    */
-  params(params: DeepPartial<T>): this {
+  params<TOverride extends T = T>(
+    params: DeepPartial<TOverride>,
+  ): Factory<TOverride, I> {
     const factory = this.clone();
     factory._params = merge({}, this._params, params, mergeCustomizer);
-    return factory;
+    return factory as unknown as Factory<TOverride, I>;
   }
 
   /**
