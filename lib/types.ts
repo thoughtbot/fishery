@@ -17,7 +17,7 @@ export type GeneratorFnOptions<T, I, C> = {
 };
 export type GeneratorFn<T, I, C> = (opts: GeneratorFnOptions<T, I, C>) => T;
 export type HookFn<T> = (object: T) => any;
-export type OnCreateFn<T, C = T> = (object: T | C) => C | Promise<C>;
+export type OnCreateFn<T, C = T> = (object: T) => C | Promise<C>;
 export type AfterCreateFn<C> = (object: C) => C | Promise<C>;
 export type BuildOptions<T, I> = {
   associations?: Partial<T>;
