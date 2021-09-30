@@ -4,25 +4,27 @@ import {
   BuildOptions,
   GeneratorFnOptions,
   HookFn,
-  CreateFn,
+  OnCreateFn,
+  AfterCreateFn,
 } from './types';
 import { FactoryBuilder } from './builder';
 import { merge, mergeCustomizer } from './merge';
 
 const SEQUENCE_START_VALUE = 1;
 
-export class Factory<T, I = any> {
+export class Factory<T, I = any, C = T> {
   // id is an object so it is shared between extended factories
   private id: { value: number } = { value: SEQUENCE_START_VALUE };
 
   private _afterBuilds: HookFn<T>[] = [];
-  private _onCreates: CreateFn<T>[] = [];
+  private _afterCreates: AfterCreateFn<C>[] = [];
+  private _onCreate?: OnCreateFn<T, C>;
   private _associations: Partial<T> = {};
   private _params: DeepPartial<T> = {};
   private _transient: Partial<I> = {};
 
   constructor(
-    private readonly generator: (opts: GeneratorFnOptions<T, I>) => T,
+    private readonly generator: (opts: GeneratorFnOptions<T, I, C>) => T,
   ) {}
 
   /**
@@ -32,10 +34,10 @@ export class Factory<T, I = any> {
    * @template C The class of the factory object being created.
    * @param generator - your factory function
    */
-  static define<T, I = any, C = Factory<T, I>>(
-    this: new (generator: GeneratorFn<T, I>) => C,
-    generator: GeneratorFn<T, I>,
-  ): C {
+  static define<T, I = any, C = T, F = Factory<T, I, C>>(
+    this: new (generator: GeneratorFn<T, I, C>) => F,
+    generator: GeneratorFn<T, I, C>,
+  ): F {
     return new this(generator);
   }
 
@@ -69,7 +71,7 @@ export class Factory<T, I = any> {
   async create(
     params: DeepPartial<T> = {},
     options: BuildOptions<T, I> = {},
-  ): Promise<T> {
+  ): Promise<C> {
     return this.builder(params, options).create();
   }
 
@@ -77,8 +79,8 @@ export class Factory<T, I = any> {
     number: number,
     params: DeepPartial<T> = {},
     options: BuildOptions<T, I> = {},
-  ): Promise<T[]> {
-    let list: Promise<T>[] = [];
+  ): Promise<C[]> {
+    let list: Promise<C>[] = [];
     for (let i = 0; i < number; i++) {
       list.push(this.create(params, options));
     }
@@ -98,13 +100,28 @@ export class Factory<T, I = any> {
   }
 
   /**
-   * Extend the factory by adding a function to be called on creation.
-   * @param onCreateFn - The function to call. IT accepts your object of type T. The value this function returns gets returned from "create"
+   * Define a transform that occurs when `create` is called on the factory. Specifying an `onCreate` overrides any previous `onCreate`s.
+   * To return a different type from `build`, specify a third type argument when defining the factory.
+   * @param onCreateFn - The function to call. IT accepts your object of type T.
+   * The value this function returns gets returned from "create" after any
+   * `afterCreate`s are run
    * @return a new factory
    */
-  onCreate(onCreateFn: CreateFn<T>): this {
+  onCreate(onCreateFn: OnCreateFn<T, C>): this {
     const factory = this.clone();
-    factory._onCreates.push(onCreateFn);
+    factory._onCreate = onCreateFn;
+    return factory;
+  }
+
+  /**
+   * Extend the factory by adding a function to be called after creation. This is called after `onCreate` but before the object is returned from `create`.
+   * If multiple are defined, they are chained.
+   * @param afterCreateFn
+   * @return a new factory
+   */
+  afterCreate(afterCreateFn: AfterCreateFn<C>): this {
+    const factory = this.clone();
+    factory._afterCreates.push(afterCreateFn);
     return factory;
   }
 
@@ -148,12 +165,12 @@ export class Factory<T, I = any> {
     this.id.value = SEQUENCE_START_VALUE;
   }
 
-  protected clone<C extends Factory<T, I>>(this: C): C {
+  protected clone<F extends Factory<T, I, C>>(this: F): F {
     const copy = new (this.constructor as {
-      new (generator: GeneratorFn<T, I>): C;
+      new (generator: GeneratorFn<T, I, C>): F;
     })(this.generator);
     Object.assign(copy, this);
-    copy._onCreates = [...this._onCreates];
+    copy._afterCreates = [...this._afterCreates];
     copy._afterBuilds = [...this._afterBuilds];
     return copy;
   }
@@ -166,14 +183,15 @@ export class Factory<T, I = any> {
     params: DeepPartial<T> = {},
     options: BuildOptions<T, I> = {},
   ) {
-    return new FactoryBuilder<T, I>(
+    return new FactoryBuilder<T, I, C>(
       this.generator,
       this.sequence(),
       merge({}, this._params, params, mergeCustomizer),
       { ...this._transient, ...options.transient },
       { ...this._associations, ...options.associations },
       this._afterBuilds,
-      this._onCreates,
+      this._afterCreates,
+      this._onCreate,
     );
   }
 }
