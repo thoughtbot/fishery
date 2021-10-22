@@ -1,6 +1,6 @@
 {
   "name": "fishery",
-  "version": "1.4.0",
+  "version": "2.0.0",
   "description": "A library for setting up JavaScript factories to help build objects as test data, with full TypeScript support",
   "keywords": [
     "factories",
