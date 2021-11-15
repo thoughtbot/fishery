@@ -271,7 +271,7 @@ const user = await userFactory.create();
 Similar to `onCreate`, `afterCreate`s can also be defined. These are executed after the `onCreate`, and multiple can be defined for a given factory.
 
 ```typescript
-const userFactory Factory.define<User, any, SavedUser>(
+const userFactory = Factory.define<User, any, SavedUser>(
   ({ sequence, onCreate, afterCreate }) => {
     onCreate(user => {
       return apiService.create(user);
@@ -288,7 +288,9 @@ const userFactory Factory.define<User, any, SavedUser>(
 );
 
 // can define additional afterCreates
-const savedUser = userFactory.afterCreate(async savedUser => savedUser).create()
+const savedUser = userFactory
+  .afterCreate(async savedUser => savedUser)
+  .create();
 ```
 
 ### Extending factories
