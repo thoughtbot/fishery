@@ -197,4 +197,26 @@ describe('merging params', () => {
       entity1Factory.build({ entity2 });
     });
   });
+
+  describe('indexed types', () => {
+    it('compiles and merges successfully', () => {
+      type Params = {
+        [name: string]: string | string[] | undefined | null;
+      };
+
+      const requestFactory = Factory.define<Params>(({ params }) => {
+        return {
+          foo: 'bar',
+        };
+      });
+
+      expect(
+        requestFactory.build({ param1: ['value1'], param2: null }),
+      ).toEqual({
+        foo: 'bar',
+        param1: ['value1'],
+        param2: null,
+      });
+    });
+  });
 });

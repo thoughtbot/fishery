@@ -1,10 +1,4 @@
-export type DeepPartial<T> = {
-  [P in keyof T]?: unknown extends T[P]
-    ? T[P]
-    : T[P] extends Array<any>
-    ? T[P]
-    : DeepPartial<T[P]>;
-};
+import { DeepPartial } from './deepPartial';
 
 export type GeneratorFnOptions<T, I, C> = {
   sequence: number;

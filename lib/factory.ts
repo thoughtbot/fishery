@@ -19,9 +19,9 @@ export class Factory<T, I = any, C = T> {
   private _afterBuilds: HookFn<T>[] = [];
   private _afterCreates: AfterCreateFn<C>[] = [];
   private _onCreate?: OnCreateFn<T, C>;
-  private _associations: Partial<T> = {};
-  private _params: DeepPartial<T> = {};
-  private _transient: Partial<I> = {};
+  private _associations?: Partial<T>;
+  private _params?: DeepPartial<T>;
+  private _transient?: Partial<I>;
 
   constructor(
     private readonly generator: (opts: GeneratorFnOptions<T, I, C>) => T,
@@ -46,13 +46,13 @@ export class Factory<T, I = any, C = T> {
    * @param params
    * @param options
    */
-  build(params: DeepPartial<T> = {}, options: BuildOptions<T, I> = {}): T {
+  build(params?: DeepPartial<T>, options: BuildOptions<T, I> = {}): T {
     return this.builder(params, options).build();
   }
 
   buildList(
     number: number,
-    params: DeepPartial<T> = {},
+    params?: DeepPartial<T>,
     options: BuildOptions<T, I> = {},
   ): T[] {
     let list: T[] = [];
@@ -69,7 +69,7 @@ export class Factory<T, I = any, C = T> {
    * @param options
    */
   async create(
-    params: DeepPartial<T> = {},
+    params?: DeepPartial<T>,
     options: BuildOptions<T, I> = {},
   ): Promise<C> {
     return this.builder(params, options).create();
@@ -77,7 +77,7 @@ export class Factory<T, I = any, C = T> {
 
   async createList(
     number: number,
-    params: DeepPartial<T> = {},
+    params?: DeepPartial<T>,
     options: BuildOptions<T, I> = {},
   ): Promise<C[]> {
     let list: Promise<C>[] = [];
@@ -179,10 +179,7 @@ export class Factory<T, I = any, C = T> {
     return this.id.value++;
   }
 
-  protected builder(
-    params: DeepPartial<T> = {},
-    options: BuildOptions<T, I> = {},
-  ) {
+  protected builder(params?: DeepPartial<T>, options: BuildOptions<T, I> = {}) {
     return new FactoryBuilder<T, I, C>(
       this.generator,
       this.sequence(),

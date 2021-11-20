@@ -1,4 +1,4 @@
-import { OnCreateFn, Factory, HookFn } from 'fishery';
+import { Factory, HookFn } from 'fishery';
 
 type User = {
   id: string;

@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: ~/fishery
     docker:
-      - image: circleci/node:10.16.3
+      - image: circleci/node:12.22.6
     steps:
       - checkout
       - restore_cache:
@@ -21,4 +21,9 @@ jobs:
       - run:
           name: Check code formatting
           command: yarn pretty:check
-      - run: yarn test
+      - run:
+          name: Check types
+          command: yarn test:types
+      - run:
+          name: Run tests
+          command: yarn test
