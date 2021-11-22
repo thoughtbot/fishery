@@ -2,11 +2,12 @@
   "compilerOptions": {
     "lib": ["dom", "es2017"],
     "target": "es5",
-    "module": "commonjs",
+    "module": "ES2015",
     "outDir": "./dist",
     "strict": true,
     "declaration": true,
     "esModuleInterop": true,
+    "moduleResolution": "Node",
     "baseUrl": ".",
     "paths": {
       "fishery": ["lib/index"]

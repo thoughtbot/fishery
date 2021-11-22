@@ -11,16 +11,18 @@
     "mock",
     "test data"
   ],
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/fishery.js",
+  "module": "dist/fishery.mjs",
+  "unpkg": "dist/fishery.umd.js",
   "files": [
-    "dist/"
+    "dist"
   ],
+  "types": "dist/index.d.ts",
   "tsd": {
     "directory": "lib/__tests__/types"
   },
   "scripts": {
-    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "build": "rm -rf dist && rollup -c",
     "test": "jest",
     "test:all": "yarn test && yarn test:types && yarn pretty:check",
     "test:types": "mkdir -p dist && touch dist/index.d.ts && yarn tsd",
@@ -55,12 +57,17 @@
     ]
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^21.0.1",
+    "@rollup/plugin-node-resolve": "^13.0.6",
     "@types/jest": "^26.0.20",
     "@types/lodash.mergewith": "^4.6.6",
     "jest": "^26.6.3",
     "prettier": "^2.2.1",
+    "rollup": "^2.60.1",
+    "rollup-plugin-typescript2": "^0.31.0",
     "ts-jest": "^26.4.4",
     "tsd": "^0.17.0",
+    "tslib": "^2.3.1",
     "typescript": "^3.9.5"
   },
   "dependencies": {
