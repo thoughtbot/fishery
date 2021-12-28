@@ -17,6 +17,18 @@ describe('build', () => {
     factory.build({ sdf: true, name: 'Susan' });
   });
 
+  it('generates appropriate type errors', () => {
+    const factory = createFactory({
+      build: () => ({ id: 1, name: 'Bob' }),
+    });
+
+    // @ts-expect-error id should be typed as number
+    factory.build({ id: '1' });
+
+    // @ts-expect-error extra param should error
+    factory.build({ sdf: true, name: 'Susan' });
+  });
+
   it('can leave out params when building', () => {
     const factory = createFactory({ build: () => ({ id: 1, name: 'John' }) });
 
