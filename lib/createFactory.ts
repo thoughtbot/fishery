@@ -1,4 +1,5 @@
 import { DeepPartial } from './types';
+import { merge, mergeCustomizer } from './merge';
 
 type TraitsInput<T, Traits> = {
   [Trait in keyof Traits]: () => Partial<T>;
@@ -44,5 +45,11 @@ export function createFactory<
   },
   params?: DeepPartial<T>,
 ): FactoryInstance<T, TraitsInputs, Created, I> {
-  return 1 as any;
+  const build = (buildParams: DeepPartial<T>) => {
+    return merge(define.build(), params, buildParams, mergeCustomizer);
+  };
+
+  return {
+    build,
+  } as any;
 }

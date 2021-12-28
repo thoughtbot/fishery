@@ -1,15 +1,17 @@
 import { createFactory } from 'fishery';
-import { User } from './helpers/test-types';
 
 describe('build', () => {
   it('builds the object', () => {
     const factory = createFactory({
-      build: () => ({ id: 1, name: 'Bob' } as User),
+      build: () => ({ id: 1, name: 'Bob' }),
     });
 
-    const user = factory.build({ id: 2 as const, name: 'Susan' });
-    expect(user.id).toBe(1);
+    const user = factory.build({ id: 2, name: 'Susan' });
+    expect(user.id).toBe(2);
     expect(user.name).toEqual('Susan');
+
+    // @ts-expect-error id should be typed as number
+    factory.build({ id: '1' });
 
     // @ts-expect-error extra param should error
     factory.build({ sdf: true, name: 'Susan' });
@@ -24,10 +26,8 @@ describe('build', () => {
   });
 
   it('works with nested parameters', () => {
-    type User = { id: number; address: { city: string; state: string } };
     const factory = createFactory({
-      build: () =>
-        ({ id: 1, address: { city: 'Austin', state: 'TX' } } as User),
+      build: () => ({ id: 1, address: { city: 'Austin', state: 'TX' } }),
     });
 
     factory.build({
@@ -36,11 +36,12 @@ describe('build', () => {
     });
 
     const user = factory.build({
-      id: 2 as const,
-      // @ts-expect-error extra nested property should be error
-      address: { foo: 'sdf', state: 'sdf' },
+      id: 2,
+      address: { city: 'San Antonio' },
     });
 
-    expect(user.id).toBe(1);
+    expect(user.id).toBe(2);
+    expect(user.address.city).toEqual('San Antonio');
+    expect(user.address.state).toEqual('TX'); // preserves nested default
   });
 });
