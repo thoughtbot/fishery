@@ -120,30 +120,6 @@ describe('build', () => {
         });
       });
 
-      it('requires some type help if params and create are used at same time', () => {
-        const factory = createFactory({
-          type: factoryType<User>(),
-          build: ({ params }) => ({ id: 1, name: 'Jan' }),
-          create: async user => user,
-        });
-
-        // no error, typed as unknown, to fix!
-        const user = factory.build({ foo: 'bar' });
-
-        expect(user.foo).toEqual('bar');
-
-        // @ts-expect-error return type now matches the params
-        user.id;
-
-        // typing the user on 'create' hints the type to the type-checker
-        const factory2 = createFactory({
-          build: ({ params }) => ({ id: 1, name: params.name || 'Jan' }),
-          create: async (user: User) => user,
-        });
-
-        // @ts-expect-error factory correctly typed as User
-        factory2.build({ foo: 'bar' });
-      });
     });
   });
 });

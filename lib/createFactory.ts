@@ -16,7 +16,7 @@ type TraitsInput<T, Traits> = {
 
 export type FactoryInstance<
   T,
-  TraitsObj extends TraitsInput<T, {}>,
+  Traits extends TraitsInput<T, {}>,
   Created,
   I,
 > = {
@@ -27,17 +27,17 @@ export type FactoryInstance<
   ) => T & BuildParams;
   extend: <NewType>(
     params: NewType,
-  ) => FactoryInstance<T & NewType, TraitsObj, Created, I>;
-  params: (params: DeepPartial<T>) => FactoryInstance<T, TraitsObj, Created, I>;
+  ) => FactoryInstance<T & NewType, Traits, Created, I>;
+  params: (params: DeepPartial<T>) => FactoryInstance<T, Traits, Created, I>;
   create: Created extends {} ? (obj?: Partial<T>) => Promise<Created> : never;
 } & {
-  [Trait in keyof TraitsObj]: TraitsObj[Trait] extends (
+  [Trait in keyof Traits]: Traits[Trait] extends (
     ...args: infer TraitParams
   ) => infer TraitReturn
     ? (
         ...args: TraitParams
-      ) => FactoryInstance<T & TraitReturn, TraitsObj, Created, I>
-    : () => FactoryInstance<T, TraitsObj, Created, I>;
+      ) => FactoryInstance<T & TraitReturn, Traits, Created, I>
+    : () => FactoryInstance<T, Traits, Created, I>;
 };
 
 export type BuildOptions<U> = {
@@ -59,9 +59,7 @@ export function createFactory<
     create?: (obj: T) => Promise<Created>;
   },
   params?: DeepPartial<T>,
-): Traits extends infer TraitsInferred
-  ? FactoryInstance<T, TraitsInput<T, TraitsInferred>, Created, I>
-  : FactoryInstance<T, TraitsInput<T, {}>, Created, I> {
+): FactoryInstance<T, TraitsInput<T, Traits>, Created, I> {
   let sequence = 1;
 
   const build = (buildParams: DeepPartial<Params>) => {
