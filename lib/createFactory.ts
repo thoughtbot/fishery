@@ -9,6 +9,8 @@ export function factoryType<T>() {
 type TraitsInput<T, Traits> = {
   [Trait in keyof Traits]: Traits[Trait] extends () => infer R
     ? () => R
+    : Traits[Trait] extends (...params: infer P) => infer S
+    ? (...params: P) => S
     : () => Partial<T>;
 };
 
@@ -29,12 +31,13 @@ export type FactoryInstance<
   params: (params: DeepPartial<T>) => FactoryInstance<T, TraitsObj, Created, I>;
   create: Created extends {} ? (obj?: Partial<T>) => Promise<Created> : never;
 } & {
-  [Trait in keyof TraitsObj]: () => FactoryInstance<
-    TraitsObj[Trait] extends () => infer U ? T & U : T,
-    TraitsObj,
-    Created,
-    I
-  >;
+  [Trait in keyof TraitsObj]: TraitsObj[Trait] extends (
+    ...args: infer TraitParams
+  ) => infer TraitReturn
+    ? (
+        ...args: TraitParams
+      ) => FactoryInstance<T & TraitReturn, TraitsObj, Created, I>
+    : () => FactoryInstance<T, TraitsObj, Created, I>;
 };
 
 export type BuildOptions<U> = {
@@ -70,7 +73,15 @@ export function createFactory<
     return merge(define.build(options), params, buildParams, mergeCustomizer);
   };
 
+  let traitsObj: TraitsInput<T, any> = {};
+  for (const traitName in define.traits) {
+    const trait = define.traits[traitName];
+    traitsObj[traitName] = (params: any) =>
+      createFactory(define, trait(params));
+  }
+
   return {
     build,
+    ...traitsObj,
   } as any;
 }
