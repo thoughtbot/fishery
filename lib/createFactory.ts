@@ -1,6 +1,11 @@
 import { DeepPartial } from './types';
 import { merge, mergeCustomizer } from './merge';
 
+export function factoryType<T>() {
+  const t = null as unknown as T;
+  return [t, t] as const;
+}
+
 type TraitsInput<T, Traits> = {
   [Trait in keyof Traits]: Traits[Trait] extends () => infer R
     ? () => R
@@ -45,6 +50,7 @@ export function createFactory<
   I = any,
 >(
   define: {
+    type?: readonly [T, Params];
     build: (options: BuildOptions<Params>) => T;
     traits?: Traits;
     create?: (obj: T) => Promise<Created>;
