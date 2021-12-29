@@ -11,11 +11,15 @@ describe('createFactory', () => {
         });
 
         expect(factory.build().id).toBe(1);
-        expect(factory.build().id).toBe(2);
+
+        expect(factory.build({ name: 'Jan' }).id).toBe(2);
+
+        // @ts-expect-error factory correctly typed as User
+        factory.build({ foo: 'bar' });
       });
 
-      it('is shared when extending the factory');
-      it('can be reset');
+      it.todo('is shared when extending the factory');
+      it.todo('can be reset');
     });
 
     describe('params', () => {
@@ -24,7 +28,6 @@ describe('createFactory', () => {
 
         const factory = createFactory({
           build: ({ params }: BuildOptions<User>) => {
-            // const name = 'John'
             const name = params.name || 'John';
             const email = `${name}@example.com`;
             return { name, email } as User;
@@ -32,100 +35,96 @@ describe('createFactory', () => {
           create: async user => user,
         });
 
+        // @ts-expect-error factory correctly typed as User
+        factory.build({ foo: 'bar' });
+
         expect(factory.build({ name: 'Sue' })).toMatchObject({
           name: 'Sue',
           email: 'Sue@example.com',
         });
       });
+
+      it('requires some type help if params and create are used at same time', () => {
+        const factory = createFactory({
+          build: ({ params }) => ({ id: 1, name: 'Jan' }),
+          create: async user => user,
+        });
+
+        // no error, typed as unknown, to fix!
+        const user = factory.build({ foo: 'bar' });
+
+        expect(user.foo).toEqual('bar');
+
+        // @ts-expect-error return type now matches the params
+        user.id;
+
+        // typing the user on 'create' hints the type to the type-checker
+        const factory2 = createFactory({
+          build: ({ params }) => ({ id: 1, name: params.name || 'Jan' }),
+          create: async (user: User) => user,
+        });
+
+        // @ts-expect-error factory correctly typed as User
+        factory2.build({ foo: 'bar' });
+      });
     });
   });
 
-  it('creates the factory with build', () => {
-    const factory = createFactory({
-      build: () => ({ id: 1, name: 'Bob' } as User),
+  describe('create', () => {
+    it('infers the return type when defined', async () => {
+      const factory = createFactory({
+        build: () => ({ name: 'Bob', id: 1 }),
+        create: async obj => ({ ...obj, id: 2 }),
+      });
+
+      const user = await factory.create();
+      expect(user.id).toEqual(2);
     });
 
-    const user = factory.build({ id: 2 as const, name: 'Susan' });
-    expect(user.id).toBe(1);
-    expect(user.name).toEqual('Susan');
+    it('only allows factory.create if defined with createFactory', () => {
+      const factory = createFactory({ build: () => ({ name: 'Bob', id: 1 }) });
 
-    // extra param
-    // @ts-expect-error extra param
-    factory.build({ sdf: true, name: 'Susan' });
-
-    // can leave out params
-    factory.build({ name: 'Susan' });
+      // @ts-expect-error create not defined
+      factory.create();
+    });
   });
 
-  it('works with nested parameters', () => {
-    type User = { id: number; address: { city: string; state: string } };
-    const factory = createFactory({
-      build: () =>
-        ({ id: 1, address: { city: 'Austin', state: 'TX' } } as User),
-    });
+  it('example with lots of options', () => {
+    type User = { name: string; admin: boolean };
+    type AdminUser = User & { admin: true };
+    type SavedUser = User & { id: number };
+    type Post = { id: number; body: string };
 
-    factory.build;
-    const user = factory.build({
-      id: 2 as const,
-      // @ts-expect-error extra nested property
-      address: { foo: 'sdf', state: 'sdf' },
-    });
-    expect(user.id).toBe(1);
-
-    // extra param
-    // @ts-expect-error
-    factory.build({ sdf: true, name: 'Susan' });
-  });
-});
-
-it('creates the factory', () => {
-  type User = { name: string; admin: boolean };
-  type AdminUser = User & { admin: true };
-  type SavedUser = User & { id: number };
-  type Post = { id: number; body: string };
-
-  const factory = createFactory(
-    {
-      build: () =>
-        ({
-          name: 'Bob',
-          admin: false,
-        } as User),
-      create: obj => Promise.resolve({ ...obj, id: 1 }),
-      traits: {
-        admin: () => ({ admin: true as const }),
+    const factory = createFactory(
+      {
+        build: () =>
+          ({
+            name: 'Bob',
+            admin: false,
+          } as User),
+        create: obj => Promise.resolve({ ...obj, id: 1 }),
+        traits: {
+          admin: () => ({ admin: true as const }),
+          bill: () => ({ foo: 'bar' }),
+        },
       },
-    },
-    { admin: true },
-  );
+      { admin: true },
+    );
 
-  const user = factory.build({ admin: true, name: 'Susan' });
-  user.admin;
+    const user = factory.build({ admin: true, name: 'Susan' });
 
-  // create
-  factory.create({});
+    // create
+    factory.create({});
 
-  const userWithPostsFactory = factory.extend({ posts: [] as Post[] });
-  const userWithPosts = userWithPostsFactory.build({
-    posts: [{ id: 1, body: 'post' }],
-  });
-
-  // traits
-  const adminFactory = factory.admin();
-  const admin: AdminUser = adminFactory.build({});
-});
-
-describe('create', () => {
-  it('doesnt mess up return types', () => {
-    const factory = createFactory({
-      build: () =>
-        ({
-          name: 'Bob',
-          id: 1,
-        } as User),
-      create: async obj => obj,
+    const userWithPostsFactory = factory.extend({ posts: [] as Post[] });
+    const userWithPosts = userWithPostsFactory.build({
+      posts: [{ id: 1, body: 'post' }],
     });
 
-    const user = factory.build();
+    expect(userWithPosts.posts[0].id).toBe(1);
+
+    // traits
+    const adminFactory = factory.admin();
+    const admin: AdminUser = adminFactory.build({});
   });
 });

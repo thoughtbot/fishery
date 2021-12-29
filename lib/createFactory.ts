@@ -1,13 +1,10 @@
 import { DeepPartial } from './types';
 import { merge, mergeCustomizer } from './merge';
 
-export type BuildOptions<T> = {
-  sequence: number;
-  params: DeepPartial<T>;
-};
-
 type TraitsInput<T, Traits> = {
-  [Trait in keyof Traits]: () => Partial<T>;
+  [Trait in keyof Traits]: Traits[Trait] extends () => infer R
+    ? () => R
+    : () => Partial<T>;
 };
 
 export type FactoryInstance<
@@ -25,7 +22,7 @@ export type FactoryInstance<
     params: NewType,
   ) => FactoryInstance<T & NewType, TraitsObj, Created, I>;
   params: (params: DeepPartial<T>) => FactoryInstance<T, TraitsObj, Created, I>;
-  create: Created extends {} ? (obj: Partial<T>) => Promise<Created> : never;
+  create: Created extends {} ? (obj?: Partial<T>) => Promise<Created> : never;
 } & {
   [Trait in keyof TraitsObj]: () => FactoryInstance<
     TraitsObj[Trait] extends () => infer U ? T & U : T,
@@ -35,33 +32,30 @@ export type FactoryInstance<
   >;
 };
 
-type BuildFnOption<T> = {
-  (options: BuildOptions<T>): T;
-};
-
-type DefineOptions<T, TraitsInputs extends TraitsInput<T, {}>, Created> = {
-  build: (options: BuildOptions<T>) => T;
-  traits?: TraitsInputs;
-  create?: (obj: T) => Promise<Created>;
+export type BuildOptions<U> = {
+  sequence: number;
+  params: DeepPartial<U>;
 };
 
 export function createFactory<
   T,
-  TraitsInputs extends TraitsInput<T, {}>,
-  I,
-  Created,
+  Params extends T = T,
+  Traits extends TraitsInput<T, {}> = any,
+  Created = unknown,
+  I = any,
 >(
-  // define: DefineOptions<T, TraitsInputs, Created>,
   define: {
-    build: (options: BuildOptions<T>) => T;
-    traits?: TraitsInputs;
+    build: (options: BuildOptions<Params>) => T;
+    traits?: Traits;
     create?: (obj: T) => Promise<Created>;
   },
   params?: DeepPartial<T>,
-): FactoryInstance<T, TraitsInputs, Created, I> {
+): Traits extends infer TraitsInferred
+  ? FactoryInstance<T, TraitsInput<T, TraitsInferred>, Created, I>
+  : FactoryInstance<T, TraitsInput<T, {}>, Created, I> {
   let sequence = 1;
 
-  const build = (buildParams: DeepPartial<T>) => {
+  const build = (buildParams: DeepPartial<Params>) => {
     const options = {
       sequence: sequence++,
       params: buildParams,

@@ -17,6 +17,18 @@ describe('build', () => {
     factory.build({ sdf: true, name: 'Susan' });
   });
 
+  it('is typed correctly when factory created with params', () => {
+    const factory = createFactory({
+      build: ({ params }) => ({ id: 1, name: 'Bob' }),
+    });
+
+    // @ts-expect-error id should be typed as number
+    factory.build({ id: '1' });
+
+    // @ts-expect-error extra param should error
+    factory.build({ sdf: true, name: 'Susan' });
+  });
+
   it('generates appropriate type errors', () => {
     const factory = createFactory({
       build: () => ({ id: 1, name: 'Bob' }),
@@ -38,10 +50,19 @@ describe('build', () => {
   });
 
   it('works with nested parameters', () => {
-    const factory = createFactory({
+    type User = {
+      id: number;
+      address: { city: string; state: string };
+    };
+
+    const factory = createFactory<User>({
       build: () => ({ id: 1, address: { city: 'Austin', state: 'TX' } }),
+      traits: {
+        admin: () => ({ admin: true }),
+      },
     });
 
+    factory.admin().build();
     factory.build({
       // @ts-expect-error extra nested property should be error
       address: { foo: 'sdf', state: 'sdf' },
