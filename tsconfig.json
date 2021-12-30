@@ -7,6 +7,7 @@
     "strict": true,
     "declaration": true,
     "esModuleInterop": true,
+    "noErrorTruncation": true,
     "baseUrl": ".",
     "paths": {
       "fishery": ["lib/index"]

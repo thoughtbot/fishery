@@ -26,8 +26,13 @@ export type FactoryInstance<
       : DeepPartial<T>,
   ) => T & BuildParams;
   extend: <NewType>(
-    params: NewType,
-  ) => FactoryInstance<T & NewType, Traits, Created, I>;
+    newParams: DeepPartial<NewType>,
+  ) => FactoryInstance<
+    NewType extends T ? NewType : T & NewType,
+    Traits,
+    Created,
+    I
+  >;
   params: (params: DeepPartial<T>) => FactoryInstance<T, Traits, Created, I>;
   create: Created extends {} ? (obj?: Partial<T>) => Promise<Created> : never;
 } & {
@@ -46,11 +51,12 @@ export type BuildOptions<U> = {
 };
 
 export function createFactory<
-  T,
-  Traits,
-  Params extends T = T,
-  Created = unknown,
-  I = any,
+  T, // Type of returned object
+  Traits, // Type of traits
+  Params extends T = T, // type of params passed to builder, same as T
+  Created = unknown, // type of created object
+  I = any, // type of transient params
+  ExtensionParams = DeepPartial<T>, // type of extra params
 >(
   define: {
     type?: readonly [T, Params];
@@ -58,32 +64,42 @@ export function createFactory<
     traits?: Traits extends TraitsInput<T> ? Traits : never;
     create?: (obj: T) => Promise<Created>;
   },
-  params?: DeepPartial<T>,
+  params?: ExtensionParams,
 ): Traits extends TraitsInput<T>
   ? FactoryInstance<T, TraitsInputs<T, Traits>, Created, I>
   : FactoryInstance<T, TraitsInputs<T, {}>, Created, I> {
   let sequence = 1;
 
-  const build = (buildParams: DeepPartial<Params>) => {
-    const options = {
-      sequence: sequence++,
-      params: buildParams,
-    };
-
-    return merge(define.build(options), params, buildParams, mergeCustomizer);
-  };
-
   let traitsObj: any = {};
   if (define.traits) {
     for (const traitName in define.traits) {
       const trait = define.traits[traitName];
-      traitsObj[traitName] = (...params: any[]) =>
-        createFactory(define, trait(...params));
+      traitsObj[traitName] = (...traitParams: any[]) =>
+        createFactory(define, merge({}, params, trait(...traitParams)));
     }
   }
 
   return {
-    build,
+    build(buildParams: DeepPartial<Params>) {
+      const options = {
+        sequence: sequence++,
+        params: buildParams,
+      };
+
+      return merge(
+        {},
+        define.build(options),
+        params,
+        buildParams,
+        mergeCustomizer,
+      );
+    },
     ...traitsObj,
+    extend: <NewType extends T>(
+      newParams: Omit<NewType, keyof T> & DeepPartial<T>,
+    ) => {
+      const mergedParams = merge({}, params, newParams, mergeCustomizer);
+      return createFactory(define, mergedParams);
+    },
   } as any;
 }
