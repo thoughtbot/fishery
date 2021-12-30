@@ -57,14 +57,10 @@ describe('build', () => {
       address: { city: string; state: string };
     };
 
-    const factory = createFactory<User>({
+    const factory = createFactory({
       build: () => ({ id: 1, address: { city: 'Austin', state: 'TX' } }),
-      traits: {
-        admin: () => ({ admin: true }),
-      },
     });
 
-    factory.admin().build();
     factory.build({
       // @ts-expect-error extra nested property should be error
       address: { foo: 'sdf', state: 'sdf' },
