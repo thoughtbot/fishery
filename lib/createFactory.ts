@@ -15,34 +15,63 @@ type TraitsInputs<T, Traits extends TraitsInput<T>> = {
 };
 
 export type FactoryInstance<
-  T,
-  Traits extends TraitsInputs<T, TraitsInput<T>>,
+  OriginalType, // always the type when the factory originally defined
+  ExtensionParams, // params that are added with traits/extend/.params
+  Traits extends TraitsInputs<OriginalType, TraitsInput<OriginalType>>,
   Created,
   I,
+  BuildType = OriginalType & ExtensionParams, // same as ExtensionParams but want to preserve name if passed with extend
 > = {
-  build: <BuildParams extends T>(
-    params?: keyof BuildParams extends keyof DeepPartial<T>
+  build: <BuildParams extends BuildType>(
+    params?: keyof BuildParams extends keyof DeepPartial<BuildType>
       ? DeepPartial<BuildParams>
-      : DeepPartial<T>,
-  ) => T & BuildParams;
+      : DeepPartial<BuildType>,
+  ) => BuildType & BuildParams;
   extend: <NewType>(
     newParams: DeepPartial<NewType>,
   ) => FactoryInstance<
-    NewType extends T ? NewType : T & NewType,
+    OriginalType,
+    ExtensionParams,
     Traits,
     Created,
-    I
+    I,
+    NewType extends BuildType ? NewType : BuildType & NewType
   >;
-  params: (params: DeepPartial<T>) => FactoryInstance<T, Traits, Created, I>;
-  create: Created extends {} ? (obj?: Partial<T>) => Promise<Created> : never;
+  params: <ParamsType extends BuildType>(
+    params: DeepPartial<ParamsType>,
+  ) => FactoryInstance<
+    OriginalType,
+    ExtensionParams & ParamsType,
+    Traits,
+    Created,
+    I,
+    BuildType & ParamsType
+  >;
+  create: Created extends {}
+    ? (obj?: Partial<OriginalType>) => Promise<Created>
+    : never;
 } & {
   [Trait in keyof Traits]: Traits[Trait] extends (
     ...args: infer TraitParams
   ) => infer TraitReturn
     ? (
         ...args: TraitParams
-      ) => FactoryInstance<T & TraitReturn, Traits, Created, I>
-    : () => FactoryInstance<T, Traits, Created, I>;
+      ) => FactoryInstance<
+        OriginalType,
+        ExtensionParams & TraitReturn,
+        Traits,
+        Created,
+        I,
+        BuildType & TraitReturn
+      >
+    : () => FactoryInstance<
+        OriginalType,
+        ExtensionParams,
+        Traits,
+        Created,
+        I,
+        BuildType
+      >;
 };
 
 export type BuildOptions<U> = {
@@ -56,7 +85,7 @@ export function createFactory<
   Params extends T = T, // type of params passed to builder, same as T
   Created = unknown, // type of created object
   I = any, // type of transient params
-  ExtensionParams = DeepPartial<T>, // type of extra params
+  ExtensionParams = {}, // type of extra params
 >(
   define: {
     type?: readonly [T, Params];
@@ -66,8 +95,22 @@ export function createFactory<
   },
   params?: ExtensionParams,
 ): Traits extends TraitsInput<T>
-  ? FactoryInstance<T, TraitsInputs<T, Traits>, Created, I>
-  : FactoryInstance<T, TraitsInputs<T, {}>, Created, I> {
+  ? FactoryInstance<
+      T,
+      ExtensionParams,
+      TraitsInputs<T, Traits>,
+      Created,
+      I,
+      T & ExtensionParams
+    >
+  : FactoryInstance<
+      T,
+      ExtensionParams,
+      TraitsInputs<T, {}>,
+      Created,
+      I,
+      T & ExtensionParams
+    > {
   let sequence = 1;
 
   let traitsObj: any = {};

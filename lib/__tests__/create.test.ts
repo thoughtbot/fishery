@@ -14,7 +14,9 @@ describe('create', () => {
   it('only allows factory.create if defined with createFactory', () => {
     const factory = createFactory({ build: () => ({ name: 'Bob', id: 1 }) });
 
-    // @ts-expect-error create not defined
-    factory.create();
+    try {
+      // @ts-expect-error create not defined
+      factory.create();
+    } catch {}
   });
 });

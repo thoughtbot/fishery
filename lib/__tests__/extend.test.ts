@@ -25,9 +25,14 @@ describe('factory.extend', () => {
     });
 
     const heroFactory = factory.extend<SuperHero>({ power: 'Laservision' });
-    expect(heroFactory.build().power).toEqual('Laservision');
-    expect(heroFactory.build().id).toBe(1);
+    const hero = heroFactory.build();
+
+    expect(hero.power).toEqual('Laservision');
+    expect(hero.id).toBe(1);
     expect(heroFactory.build({ power: 'Flight' }).power).toEqual('Flight');
+
+    // @ts-expect-error foo not assignable to DeepPartial<SuperHero>
+    factory.extend<SuperHero>({ foo: 'bar' });
   });
 
   it('can override params from base object', () => {
