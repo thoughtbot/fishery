@@ -1,4 +1,4 @@
-import { factories } from './sample-app/factories';
+import { factories } from '../sample-app/factories';
 
 describe('Factory.build', () => {
   it('builds the object', () => {

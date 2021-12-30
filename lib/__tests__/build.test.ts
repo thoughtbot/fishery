@@ -1,6 +1,5 @@
-import { createFactory, factoryType } from 'fishery';
+import { createFactory } from 'fishery';
 import { BuildOptions } from 'lib/createFactory';
-import { User } from './helpers/test-types';
 
 describe('build', () => {
   it('builds the object', () => {
@@ -76,46 +75,44 @@ describe('build', () => {
     expect(user.address.state).toEqual('TX'); // preserves nested default
   });
 
-    describe('sequence param', () => {
-      it('starts at 1 and increments', () => {
-        const factory = createFactory({
-          build: ({ sequence }) => ({ id: sequence, name: 'John' }),
-        });
-
-        expect(factory.build().id).toBe(1);
-
-        expect(factory.build({ name: 'Jan' }).id).toBe(2);
-
-        // @ts-expect-error factory correctly typed as User
-        factory.build({ foo: 'bar' });
+  describe('sequence param', () => {
+    it('starts at 1 and increments', () => {
+      const factory = createFactory({
+        build: ({ sequence }) => ({ id: sequence, name: 'John' }),
       });
 
-      it.todo('is shared when extending the factory');
-      it.todo('can be reset');
+      expect(factory.build().id).toBe(1);
+
+      expect(factory.build({ name: 'Jan' }).id).toBe(2);
+
+      // @ts-expect-error factory correctly typed as User
+      factory.build({ foo: 'bar' });
     });
 
-    describe('buildOptions params', () => {
-      it('passes the passed params for use by the factory', () => {
-        type User = { name: string; email: string };
+    it.todo('is shared when extending the factory');
+    it.todo('can be reset');
+  });
 
-        const factory = createFactory({
-          build: ({ params }: BuildOptions<User>) => {
-            const name = params.name || 'John';
-            const email = `${name}@example.com`;
-            return { name, email } as User;
-          },
-          create: async user => user,
-        });
+  describe('buildOptions params', () => {
+    it('passes the passed params for use by the factory', () => {
+      type User = { name: string; email: string };
 
-        // @ts-expect-error factory correctly typed as User
-        factory.build({ foo: 'bar' });
-
-        expect(factory.build({ name: 'Sue' })).toMatchObject({
-          name: 'Sue',
-          email: 'Sue@example.com',
-        });
+      const factory = createFactory({
+        build: ({ params }: BuildOptions<User>) => {
+          const name = params.name || 'John';
+          const email = `${name}@example.com`;
+          return { name, email } as User;
+        },
+        create: async user => user,
       });
 
+      // @ts-expect-error factory correctly typed as User
+      factory.build({ foo: 'bar' });
+
+      expect(factory.build({ name: 'Sue' })).toMatchObject({
+        name: 'Sue',
+        email: 'Sue@example.com',
+      });
     });
   });
 });

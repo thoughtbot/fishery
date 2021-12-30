@@ -30,6 +30,42 @@ describe('traits', () => {
     expect(admin.admin).toBe(true);
   });
 
+  it('[not working as intended] can be called sequentially, even if conflicting types', () => {
+    type User = { name: string; admin: boolean };
+    const factory = createFactory({
+      build: () => ({ name: 'Bob', admin: false } as User),
+      traits: {
+        admin: () => ({ admin: true as const }),
+        user: () => ({ admin: false as const }),
+      },
+    });
+
+    const user = factory.admin().user().build();
+
+    // @ts-expect-error user is typed as 'never', not desired
+    user.toString;
+
+    // this works as expected (user is regular user), but types are not correct
+  });
+
+  it('if trait narrows type, cannot be cancelled out when calling build', () => {
+    type User = { name: string; admin: boolean };
+    const factory = createFactory({
+      build: () => ({ name: 'Bob', admin: false } as User),
+      traits: {
+        admin: () => ({ admin: true as const }),
+      },
+    });
+
+    // @ts-expect-error admin is type as const true
+    factory.admin().build({ admin: false });
+
+    const newFactory = factory.admin().extend({ admin: false });
+    const userF = newFactory.build();
+
+    userF.admin === false;
+  });
+
   it('errors if does not return partial<T>', () => {
     const factory = createFactory({
       build: () => ({ id: 1, name: 'Jen' } as User),
@@ -45,6 +81,14 @@ describe('traits', () => {
 
     // @ts-expect-error admin does not exist
     factory.admin();
+  });
+
+  it('errors if a param is typed incorrectly', () => {
+    createFactory({
+      build: () => ({ id: 1, name: 'Jen' } as User),
+      // @ts-expect-error param invalid
+      traits: { admin: () => ({ name: 1 }) },
+    });
   });
 
   it.todo('works with nested types');

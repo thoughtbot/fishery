@@ -1,5 +1,5 @@
 import { Factory } from 'fishery';
-import { sleep } from './helpers/sleep';
+import { sleep } from '../helpers/sleep';
 
 type Post = { id: string };
 type User = {
