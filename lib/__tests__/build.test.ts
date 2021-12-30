@@ -1,5 +1,4 @@
 import { createFactory } from 'fishery';
-import { BuildOptions } from 'lib/createFactory';
 
 describe('build', () => {
   it('builds the object', () => {
@@ -93,26 +92,26 @@ describe('build', () => {
     it.todo('can be reset');
   });
 
-  describe('buildOptions params', () => {
-    it('passes the passed params for use by the factory', () => {
-      type User = { name: string; email: string };
+  // describe('buildOptions params', () => {
+  //   it('passes the passed params for use by the factory', () => {
+  //     type User = { name: string; email: string };
 
-      const factory = createFactory({
-        build: ({ params }: BuildOptions<User>) => {
-          const name = params.name || 'John';
-          const email = `${name}@example.com`;
-          return { name, email } as User;
-        },
-        create: async user => user,
-      });
+  //     const factory = createFactory({
+  //       build: ({ params }: BuildOptions<User>) => {
+  //         const name = params.name || 'John';
+  //         const email = `${name}@example.com`;
+  //         return { name, email } as User;
+  //       },
+  //       create: async user => user,
+  //     });
 
-      // @ts-expect-error factory correctly typed as User
-      factory.build({ foo: 'bar' });
+  //     // @ts-expect-error factory correctly typed as User
+  //     factory.build({ foo: 'bar' });
 
-      expect(factory.build({ name: 'Sue' })).toMatchObject({
-        name: 'Sue',
-        email: 'Sue@example.com',
-      });
-    });
-  });
+  //     expect(factory.build({ name: 'Sue' })).toMatchObject({
+  //       name: 'Sue',
+  //       email: 'Sue@example.com',
+  //     });
+  //   });
+  // });
 });

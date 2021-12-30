@@ -74,7 +74,7 @@ export type FactoryInstance<
       >;
 };
 
-export type BuildOptions<U> = {
+type BuildOptions<U> = {
   sequence: number;
   params: DeepPartial<U>;
 };
