@@ -31,8 +31,9 @@ export class FactoryBuilder<T, I, C> {
       transientParams: this.transientParams,
     };
 
-    const object = this.generator(generatorOptions);
-    this._mergeParamsOntoObject(object);
+    const object = this._mergeParamsOntoObject(
+      this.generator(generatorOptions),
+    );
     this._callAfterBuilds(object);
     return object;
   }
@@ -62,7 +63,17 @@ export class FactoryBuilder<T, I, C> {
   // vs DeepPartial<T>) so can do the following in a factory:
   // `user: associations.user || userFactory.build()`
   _mergeParamsOntoObject(object: T) {
-    merge({}, object, this.params, this.associations, mergeCustomizer);
+    if (typeof object !== 'object') {
+      return object;
+    }
+
+    return merge(
+      Array.isArray(object) ? [] : Object.create(Object.getPrototypeOf(object)),
+      object,
+      this.params,
+      this.associations,
+      mergeCustomizer,
+    );
   }
 
   _callAfterBuilds(object: T) {
