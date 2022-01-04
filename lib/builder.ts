@@ -67,8 +67,18 @@ export class FactoryBuilder<T, I, C> {
       return object;
     }
 
+    let targetObject: unknown = object;
+
+    if (Object.getPrototypeOf(object) === Object.prototype) {
+      targetObject = {};
+    }
+
+    if (Array.isArray(object)) {
+      targetObject = [];
+    }
+
     return merge(
-      Array.isArray(object) ? [] : Object.create(Object.getPrototypeOf(object)),
+      targetObject,
       object,
       this.params,
       this.associations,
