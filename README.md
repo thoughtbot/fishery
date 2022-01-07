@@ -91,16 +91,16 @@ to build objects, so you can be confident the data you are working with is
 correct.
 
 ```typescript
-const user = factories.user.build();
+const user = userFactory.build();
 user.foo; // type error! Property 'foo' does not exist on type 'User'
 ```
 
 ```typescript
-const user = factories.user.build({ foo: 'bar' }); // type error! Argument of type '{ foo: string; }' is not assignable to parameter of type 'Partial<User>'.
+const user = userFactory.build({ foo: 'bar' }); // type error! Argument of type '{ foo: string; }' is not assignable to parameter of type 'Partial<User>'.
 ```
 
 ```typescript
-export default Factory.define<User, UserTransientParams>(
+const userFactory = Factory.define<User, UserTransientParams>(
   ({
     sequence,
     params,
@@ -170,17 +170,17 @@ Transient params are passed in to your factory and can then be used
 however you like:
 
 ```typescript
-interface User {
+type User = {
   name: string;
   posts: Post[];
   memberId: string | null;
   permissions: { canPost: boolean };
-}
+};
 
-interface UserTransientParams {
+type UserTransientParams = {
   registered: boolean;
   numPosts: number;
-}
+};
 
 const userFactory = Factory.define<User, UserTransientParams>(
   ({ transientParams, sequence }) => {
@@ -208,10 +208,11 @@ When constructing objects, any regular params you pass to `build` take
 precedence over the transient params:
 
 ```typescript
-const user = factories.user.build(
+const user = userFactory.build(
   { memberId: '1' },
   { transient: { registered: true } },
 );
+
 user.memberId; // '1'
 user.permissions.canPost; // true
 ```
@@ -227,7 +228,7 @@ This can be useful if a reference to the object is needed, like when setting
 up relationships:
 
 ```typescript
-export default Factory.define<User>(({ sequence, afterBuild }) => {
+const userFactory = Factory.define<User>(({ sequence, afterBuild }) => {
   afterBuild(user => {
     const post = factories.post.build({}, { associations: { author: user } });
     user.posts.push(post);
@@ -310,20 +311,20 @@ These extension methods can be called multiple times to continue extending
 factories:
 
 ```typescript
-const eliFactory = userFactory
+const sallyFactory = userFactory
   .params({ admin: true })
-  .params({ name: 'Eli' })
+  .params({ name: 'Sally' })
   .afterBuild(user => console.log('hello'))
   .afterBuild(user => console.log('there'));
 
-const user = eliFactory.build();
+const user = sallyFactory.build();
 // log: hello
 // log: there
-user.name; // Eli
+user.name; // Sally
 user.admin; // true
 
-const user2 = eliFactory.build({ admin: false });
-user.name; // Eli
+const user2 = sallyFactory.build({ admin: false });
+user.name; // Sally
 user2.admin; // false
 ```
 
