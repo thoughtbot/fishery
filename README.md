@@ -32,7 +32,7 @@ several arguments to your factory function to help with common situations.
 After defining your factory, you can then call `build()` on it to build your
 objects. Here's how it's done:
 
-### Define factories
+### Define and use factories
 
 ```typescript
 // factories/user.ts
@@ -40,29 +40,14 @@ import { Factory } from 'fishery';
 import { User } from '../my-types';
 import postFactory from './post';
 
-export default Factory.define<User>(({ sequence }) => ({
+const userFactory = Factory.define<User>(({ sequence }) => ({
   id: sequence,
   name: 'Rosa',
   address: { city: 'Austin', state: 'TX', country: 'USA' },
   posts: postFactory.buildList(2),
 }));
-```
 
-### Build objects with your factories
-
-```typescript
-const user = userFactory.build({ name: 'Sandra' });
-```
-
-Pass parameters as the first argument to `build` to override your factory
-defaults. These parameters are deep-merged into the default object returned by
-your factory.
-
-```typescript
-// my-test.test.ts
-import { factories } from './factories';
-
-const user = factories.user.build({
+const user = userFactory.build({
   name: 'Susan',
   address: { city: 'El Paso' },
 });
@@ -74,9 +59,17 @@ user.address.state; // TX (from factory)
 
 ### Asynchronously create objects with your factories
 
-In some cases, you might want to perform an asynchronous operation when building objects, such as saving an object to the database. This can be done by calling `create` instead of `build`:
+In some cases, you might want to perform an asynchronous operation when building objects, such as saving an object to the database. This can be done by calling `create` instead of `build`. First, define an `onCreate` for your factory that specifies the behavior of `create`, then create objects with `create` in the same way you do with `build`:
 
 ```typescript
+const userFactory = Factory.define<User>(({ onCreate }) => {
+  onCreate(user => User.create(user));
+
+  return {
+    ...
+  };
+});
+
 const user = await userFactory.create({ name: 'Maria' });
 user.name; // Maria
 ```
@@ -248,36 +241,15 @@ export default Factory.define<User>(({ sequence, afterBuild }) => {
 });
 ```
 
-### On-create hook
-
-Before using `create` to asynchronously create objects, an `onCreate` must be defined.
-
-```typescript
-const userFactory = Factory.define<User>(({ sequence, onCreate }) => {
-  onCreate(user => {
-    return apiService.create(user);
-  });
-
-  return {
-    name: 'Maria',
-  };
-});
-
-const user = await userFactory.create();
-```
-
 ### After-create hook
 
 Similar to `onCreate`, `afterCreate`s can also be defined. These are executed after the `onCreate`, and multiple can be defined for a given factory.
 
 ```typescript
-const userFactory = Factory.define<User, any, SavedUser>(
+const userFactory = Factory.define<User, {}, SavedUser>(
   ({ sequence, onCreate, afterCreate }) => {
-    onCreate(user => {
-      return apiService.create(user);
-    });
-
-    afterCreate(async savedUser => savedUser);
+    onCreate(user => apiService.create(user));
+    afterCreate(savedUser => doMoreStuff(savedUser));
 
     return {
       id: sequence,
