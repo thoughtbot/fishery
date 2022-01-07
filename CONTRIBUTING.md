@@ -50,7 +50,7 @@ First, ensure you have the latest version of the `main` branch checked out, then
 yarn build
 ```
 
-This compiles the TypeScript code to the `dist` directory. Only the compiled code is published to NPM. The `package.json` sets the `main` file as `dist/index.js`. Visually look at the `dist` directory to ensure it has the expected files.
+This compiles the TypeScript code to the `dist` directory. Only the compiled code is published to NPM. The `package.json` sets the `main` file as `dist/fishery.js`. Visually look at the `dist` directory to ensure it has the expected files.
 
 Next, increment the version using one of the following commands, according to semantic versioning guidelines:
 

@@ -19,6 +19,9 @@ jobs:
           paths:
             - ~/.cache/yarn
       - run:
+          name: Compile TypeScript
+          command: yarn tsc
+      - run:
           name: Check code formatting
           command: yarn pretty:check
       - run:
