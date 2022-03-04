@@ -71,9 +71,7 @@ export class FactoryBuilder<T, I, C> {
 
     if (Object.getPrototypeOf(object) === Object.prototype) {
       targetObject = {};
-    }
-
-    if (Array.isArray(object)) {
+    } else if (Array.isArray(object)) {
       targetObject = [];
     }
 
