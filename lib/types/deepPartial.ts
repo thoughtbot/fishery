@@ -12,6 +12,8 @@ export type DeepPartial<T> = T extends Primitive
   ? T
   : T extends ReadonlyMap<any, any>
   ? T
+  : T extends Date
+  ? Date
   : T extends (...args: any[]) => unknown
   ? T | undefined
   : T extends object
