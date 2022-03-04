@@ -4,7 +4,7 @@ export const merge = mergeWith;
 export const mergeCustomizer = (
   objValue: any,
   srcVal: any,
-  key: 'string',
+  key: string,
   object: any,
 ) => {
   if (Array.isArray(srcVal)) {

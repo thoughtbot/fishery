@@ -1,6 +1,24 @@
 import { Factory } from 'fishery';
 
 describe('merging params', () => {
+  it('doesnt mutate the params object', () => {
+    type UserAttrs = { registered: boolean; admin?: boolean };
+    type User = { attributes: UserAttrs };
+
+    const defaultUserAttrs: UserAttrs = { registered: true };
+    const userFactory = Factory.define<User>(() => ({
+      attributes: defaultUserAttrs,
+    }));
+
+    userFactory.build({
+      attributes: { ...defaultUserAttrs, registered: false, admin: true },
+    });
+
+    // not modified by factory
+    expect(defaultUserAttrs.registered).toBe(true);
+    expect(defaultUserAttrs.admin).toBe(undefined);
+  });
+
   describe('nested objects', () => {
     type User = {
       attributes: {
