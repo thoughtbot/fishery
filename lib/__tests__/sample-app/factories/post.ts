@@ -7,6 +7,7 @@ const postFactory: Factory<Post> = Factory.define<Post>(
     id: sequence,
     title: 'A Post',
     user: associations.user || userFactory.build(params.user || {}),
+    createdAt: params.createdAt || new Date(),
   }),
 );
 

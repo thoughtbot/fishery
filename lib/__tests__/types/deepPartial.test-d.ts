@@ -20,6 +20,8 @@ describe('deepPartial', () => {
       map: Map<string, number>;
       mapNull: Map<string, number> | null;
       readonlyMapNull: ReadonlyMap<string, number> | null;
+      date: Date;
+      dateNull?: Date | null;
     };
 
     type Expected = {
@@ -37,6 +39,8 @@ describe('deepPartial', () => {
       map?: Map<string, number>;
       mapNull?: Map<string, number> | null;
       readonlyMapNull?: ReadonlyMap<string, number> | null;
+      date?: Date;
+      dateNull?: Date | null;
     };
 
     type Actual = DeepPartial<MyType>;
