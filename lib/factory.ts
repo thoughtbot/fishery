@@ -51,6 +51,16 @@ export class Factory<T, I = any, C = T> {
   }
 
   buildList(
+    number: 0,
+    params?: DeepPartial<T>,
+    options?: BuildOptions<T, I>,
+  ): never[];
+  buildList(
+    number: number,
+    params?: DeepPartial<T>,
+    options?: BuildOptions<T, I>,
+  ): [T, ...T[]];
+  buildList(
     number: number,
     params?: DeepPartial<T>,
     options: BuildOptions<T, I> = {},
@@ -75,6 +85,16 @@ export class Factory<T, I = any, C = T> {
     return this.builder(params, options).create();
   }
 
+  async createList(
+    number: 0,
+    params?: DeepPartial<T>,
+    options?: BuildOptions<T, I>,
+  ): Promise<never[]>;
+  async createList(
+    number: number,
+    params?: DeepPartial<T>,
+    options?: BuildOptions<T, I>,
+  ): Promise<[C, ...C[]]>;
   async createList(
     number: number,
     params?: DeepPartial<T>,
