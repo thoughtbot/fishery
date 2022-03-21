@@ -50,16 +50,11 @@ export class Factory<T, I = any, C = T> {
     return this.builder(params, options).build();
   }
 
-  buildList(
-    number: 0,
+  buildList<N extends number>(
+    number: N,
     params?: DeepPartial<T>,
     options?: BuildOptions<T, I>,
-  ): never[];
-  buildList(
-    number: number,
-    params?: DeepPartial<T>,
-    options?: BuildOptions<T, I>,
-  ): [T, ...T[]];
+  ): number extends N ? T[] : N extends 0 ? never[] : [T, ...T[]];
   buildList(
     number: number,
     params?: DeepPartial<T>,
@@ -85,16 +80,11 @@ export class Factory<T, I = any, C = T> {
     return this.builder(params, options).create();
   }
 
-  async createList(
-    number: 0,
+  async createList<N extends number>(
+    number: N,
     params?: DeepPartial<T>,
     options?: BuildOptions<T, I>,
-  ): Promise<never[]>;
-  async createList(
-    number: number,
-    params?: DeepPartial<T>,
-    options?: BuildOptions<T, I>,
-  ): Promise<[C, ...C[]]>;
+  ): Promise<number extends N ? C[] : N extends 0 ? never[] : [C, ...C[]]>;
   async createList(
     number: number,
     params?: DeepPartial<T>,
