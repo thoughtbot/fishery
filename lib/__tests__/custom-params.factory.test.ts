@@ -19,15 +19,18 @@ type User = {
 
 type UserWithOptionalCreatedAt = DeepPartial<User> & {
   createdAt?: DateTime;
-}
+};
 
-const userFactory = Factory.define<User, {}, User, UserWithOptionalCreatedAt>(({ params }) => {
-  const created = params.createdAt ?? DateTime.fromISO(new Date().toISOString());
-  return {
-    id: '3',
-    createdAt: created,
-  };
-});
+const userFactory = Factory.define<User, {}, User, UserWithOptionalCreatedAt>(
+  ({ params }) => {
+    const created =
+      params.createdAt ?? DateTime.fromISO(new Date().toISOString());
+    return {
+      id: '3',
+      createdAt: created,
+    };
+  },
+);
 
 describe('factory.build', () => {
   it('builds the object without params', () => {
@@ -35,7 +38,6 @@ describe('factory.build', () => {
     expect(user.id).not.toBeNull();
     expect(user.createdAt).not.toBeNull();
   });
-
 
   it('builds the object with a custom params', () => {
     const date = DateTime.fromISO('2022');

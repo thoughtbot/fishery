@@ -50,11 +50,7 @@ export class Factory<T, I = any, C = T, P = DeepPartial<T>> {
     return this.builder(params, options).build();
   }
 
-  buildList(
-    number: number,
-    params?: P,
-    options: BuildOptions<T, I> = {},
-  ): T[] {
+  buildList(number: number, params?: P, options: BuildOptions<T, I> = {}): T[] {
     let list: T[] = [];
     for (let i = 0; i < number; i++) {
       list.push(this.build(params, options));
@@ -68,10 +64,7 @@ export class Factory<T, I = any, C = T, P = DeepPartial<T>> {
    * @param params
    * @param options
    */
-  async create(
-    params?: P,
-    options: BuildOptions<T, I> = {},
-  ): Promise<C> {
+  async create(params?: P, options: BuildOptions<T, I> = {}): Promise<C> {
     return this.builder(params, options).create();
   }
 
