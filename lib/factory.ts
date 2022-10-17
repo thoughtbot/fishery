@@ -12,7 +12,7 @@ import { merge, mergeCustomizer } from './merge';
 
 const SEQUENCE_START_VALUE = 1;
 
-export class Factory<T, I = any, C = T> {
+export class Factory<T, I = any, C = T, P = DeepPartial<T>> {
   // id is an object so it is shared between extended factories
   private id: { value: number } = { value: SEQUENCE_START_VALUE };
 
@@ -20,11 +20,11 @@ export class Factory<T, I = any, C = T> {
   private _afterCreates: AfterCreateFn<C>[] = [];
   private _onCreate?: OnCreateFn<T, C>;
   private _associations?: Partial<T>;
-  private _params?: DeepPartial<T>;
+  private _params?: P;
   private _transient?: Partial<I>;
 
   constructor(
-    private readonly generator: (opts: GeneratorFnOptions<T, I, C>) => T,
+    private readonly generator: (opts: GeneratorFnOptions<T, I, C, P>) => T,
   ) {}
 
   /**
@@ -34,9 +34,9 @@ export class Factory<T, I = any, C = T> {
    * @template C The class of the factory object being created.
    * @param generator - your factory function
    */
-  static define<T, I = any, C = T, F = Factory<T, I, C>>(
-    this: new (generator: GeneratorFn<T, I, C>) => F,
-    generator: GeneratorFn<T, I, C>,
+  static define<T, I = any, C = T, P = DeepPartial<T>, F = Factory<T, I, C, P>>(
+    this: new (generator: GeneratorFn<T, I, C, P>) => F,
+    generator: GeneratorFn<T, I, C, P>,
   ): F {
     return new this(generator);
   }
@@ -46,13 +46,13 @@ export class Factory<T, I = any, C = T> {
    * @param params
    * @param options
    */
-  build(params?: DeepPartial<T>, options: BuildOptions<T, I> = {}): T {
+  build(params?: P, options: BuildOptions<T, I> = {}): T {
     return this.builder(params, options).build();
   }
 
   buildList(
     number: number,
-    params?: DeepPartial<T>,
+    params?: P,
     options: BuildOptions<T, I> = {},
   ): T[] {
     let list: T[] = [];
@@ -69,7 +69,7 @@ export class Factory<T, I = any, C = T> {
    * @param options
    */
   async create(
-    params?: DeepPartial<T>,
+    params?: P,
     options: BuildOptions<T, I> = {},
   ): Promise<C> {
     return this.builder(params, options).create();
@@ -77,7 +77,7 @@ export class Factory<T, I = any, C = T> {
 
   async createList(
     number: number,
-    params?: DeepPartial<T>,
+    params?: P,
     options: BuildOptions<T, I> = {},
   ): Promise<C[]> {
     let list: Promise<C>[] = [];
@@ -141,7 +141,7 @@ export class Factory<T, I = any, C = T> {
    * @param params
    * @returns a new factory
    */
-  params(params: DeepPartial<T>): this {
+  params(params: P): this {
     const factory = this.clone();
     factory._params = merge({}, this._params, params, mergeCustomizer);
     return factory;
@@ -165,9 +165,9 @@ export class Factory<T, I = any, C = T> {
     this.id.value = SEQUENCE_START_VALUE;
   }
 
-  protected clone<F extends Factory<T, I, C>>(this: F): F {
+  protected clone<F extends Factory<T, I, C, P>>(this: F): F {
     const copy = new (this.constructor as {
-      new (generator: GeneratorFn<T, I, C>): F;
+      new (generator: GeneratorFn<T, I, C, P>): F;
     })(this.generator);
     Object.assign(copy, this);
     copy._afterCreates = [...this._afterCreates];
@@ -179,8 +179,8 @@ export class Factory<T, I = any, C = T> {
     return this.id.value++;
   }
 
-  protected builder(params?: DeepPartial<T>, options: BuildOptions<T, I> = {}) {
-    return new FactoryBuilder<T, I, C>(
+  protected builder(params?: P, options: BuildOptions<T, I> = {}) {
+    return new FactoryBuilder<T, I, C, P>(
       this.generator,
       this.sequence(),
       merge({}, this._params, params, mergeCustomizer),
