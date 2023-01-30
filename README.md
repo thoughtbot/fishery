@@ -32,7 +32,7 @@ several arguments to your factory function to help with common situations.
 After defining your factory, you can then call `build()` on it to build your
 objects. Here's how it's done:
 
-### Define factories
+### Define and use factories
 
 ```typescript
 // factories/user.ts
@@ -40,29 +40,14 @@ import { Factory } from 'fishery';
 import { User } from '../my-types';
 import postFactory from './post';
 
-export default Factory.define<User>(({ sequence }) => ({
+const userFactory = Factory.define<User>(({ sequence }) => ({
   id: sequence,
   name: 'Rosa',
   address: { city: 'Austin', state: 'TX', country: 'USA' },
   posts: postFactory.buildList(2),
 }));
-```
 
-### Build objects with your factories
-
-```typescript
-const user = userFactory.build({ name: 'Sandra' });
-```
-
-Pass parameters as the first argument to `build` to override your factory
-defaults. These parameters are deep-merged into the default object returned by
-your factory.
-
-```typescript
-// my-test.test.ts
-import { factories } from './factories';
-
-const user = factories.user.build({
+const user = userFactory.build({
   name: 'Susan',
   address: { city: 'El Paso' },
 });
@@ -74,9 +59,17 @@ user.address.state; // TX (from factory)
 
 ### Asynchronously create objects with your factories
 
-In some cases, you might want to perform an asynchronous operation when building objects, such as saving an object to the database. This can be done by calling `create` instead of `build`:
+In some cases, you might want to perform an asynchronous operation when building objects, such as saving an object to the database. This can be done by calling `create` instead of `build`. First, define an `onCreate` for your factory that specifies the behavior of `create`, then create objects with `create` in the same way you do with `build`:
 
 ```typescript
+const userFactory = Factory.define<User>(({ onCreate }) => {
+  onCreate(user => User.create(user));
+
+  return {
+    ...
+  };
+});
+
 const user = await userFactory.create({ name: 'Maria' });
 user.name; // Maria
 ```
@@ -98,16 +91,16 @@ to build objects, so you can be confident the data you are working with is
 correct.
 
 ```typescript
-const user = factories.user.build();
+const user = userFactory.build();
 user.foo; // type error! Property 'foo' does not exist on type 'User'
 ```
 
 ```typescript
-const user = factories.user.build({ foo: 'bar' }); // type error! Argument of type '{ foo: string; }' is not assignable to parameter of type 'Partial<User>'.
+const user = userFactory.build({ foo: 'bar' }); // type error! Argument of type '{ foo: string; }' is not assignable to parameter of type 'Partial<User>'.
 ```
 
 ```typescript
-export default Factory.define<User, UserTransientParams>(
+const userFactory = Factory.define<User, UserTransientParams>(
   ({
     sequence,
     params,
@@ -177,17 +170,17 @@ Transient params are passed in to your factory and can then be used
 however you like:
 
 ```typescript
-interface User {
+type User = {
   name: string;
   posts: Post[];
   memberId: string | null;
   permissions: { canPost: boolean };
-}
+};
 
-interface UserTransientParams {
+type UserTransientParams = {
   registered: boolean;
   numPosts: number;
-}
+};
 
 const userFactory = Factory.define<User, UserTransientParams>(
   ({ transientParams, sequence }) => {
@@ -215,10 +208,11 @@ When constructing objects, any regular params you pass to `build` take
 precedence over the transient params:
 
 ```typescript
-const user = factories.user.build(
+const user = userFactory.build(
   { memberId: '1' },
   { transient: { registered: true } },
 );
+
 user.memberId; // '1'
 user.permissions.canPost; // true
 ```
@@ -234,7 +228,7 @@ This can be useful if a reference to the object is needed, like when setting
 up relationships:
 
 ```typescript
-export default Factory.define<User>(({ sequence, afterBuild }) => {
+const userFactory = Factory.define<User>(({ sequence, afterBuild }) => {
   afterBuild(user => {
     const post = factories.post.build({}, { associations: { author: user } });
     user.posts.push(post);
@@ -248,36 +242,15 @@ export default Factory.define<User>(({ sequence, afterBuild }) => {
 });
 ```
 
-### On-create hook
-
-Before using `create` to asynchronously create objects, an `onCreate` must be defined.
-
-```typescript
-const userFactory = Factory.define<User>(({ sequence, onCreate }) => {
-  onCreate(user => {
-    return apiService.create(user);
-  });
-
-  return {
-    name: 'Maria',
-  };
-});
-
-const user = await userFactory.create();
-```
-
 ### After-create hook
 
 Similar to `onCreate`, `afterCreate`s can also be defined. These are executed after the `onCreate`, and multiple can be defined for a given factory.
 
 ```typescript
-const userFactory Factory.define<User, any, SavedUser>(
+const userFactory = Factory.define<User, {}, SavedUser>(
   ({ sequence, onCreate, afterCreate }) => {
-    onCreate(user => {
-      return apiService.create(user);
-    });
-
-    afterCreate(async savedUser => savedUser);
+    onCreate(user => apiService.create(user));
+    afterCreate(savedUser => doMoreStuff(savedUser));
 
     return {
       id: sequence,
@@ -288,7 +261,9 @@ const userFactory Factory.define<User, any, SavedUser>(
 );
 
 // can define additional afterCreates
-const savedUser = userFactory.afterCreate(async savedUser => savedUser).create()
+const savedUser = userFactory
+  .afterCreate(async savedUser => savedUser)
+  .create();
 ```
 
 ### Extending factories
@@ -336,20 +311,20 @@ These extension methods can be called multiple times to continue extending
 factories:
 
 ```typescript
-const eliFactory = userFactory
+const sallyFactory = userFactory
   .params({ admin: true })
-  .params({ name: 'Eli' })
+  .params({ name: 'Sally' })
   .afterBuild(user => console.log('hello'))
   .afterBuild(user => console.log('there'));
 
-const user = eliFactory.build();
+const user = sallyFactory.build();
 // log: hello
 // log: there
-user.name; // Eli
+user.name; // Sally
 user.admin; // true
 
-const user2 = eliFactory.build({ admin: false });
-user.name; // Eli
+const user2 = sallyFactory.build({ admin: false });
+user.name; // Sally
 user2.admin; // false
 ```
 
@@ -459,7 +434,7 @@ software, and may be redistributed under the terms specified in the
 
 ### About thoughtbot
 
-![thoughtbot](https://presskit.thoughtbot.com/images/thoughtbot-logo-for-readmes.svg)
+<img src="https://thoughtbot.com/thoughtbot-logo-for-readmes.svg" width="375" />
 
 Fishery is maintained and funded by thoughtbot, inc.
 The names and logos for thoughtbot are trademarks of thoughtbot, inc.
