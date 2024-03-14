@@ -432,17 +432,7 @@ Fishery is Copyright © 2021 Stephen Hanson and thoughtbot. It is free
 software, and may be redistributed under the terms specified in the
 [LICENSE](/LICENSE) file.
 
-### About thoughtbot
+<!-- START /templates/footer.md -->
+<!-- END /templates/footer.md -->
 
-<img src="https://thoughtbot.com/thoughtbot-logo-for-readmes.svg" width="375" />
-
-Fishery is maintained and funded by thoughtbot, inc.
-The names and logos for thoughtbot are trademarks of thoughtbot, inc.
-
-We love open source software!
-See [our other projects][community] or
-[hire us][hire] to design, develop, and grow your product.
-
-[community]: https://thoughtbot.com/community?utm_source=github
-[hire]: https://thoughtbot.com/hire-us?utm_source=github
 [factory_bot]: https://github.com/thoughtbot/factory_bot
