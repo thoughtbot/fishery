@@ -63,22 +63,6 @@ export class Factory<T, I = any, C = T> {
     return list;
   }
 
-  // buildDynamicList(
-  //   number: number,
-  //   params?: DeepPartial<T>,
-  //   options: BuildOptions<T, I> = {},
-  // ): T[] {
-  //   let list: T[] = [];
-  //   console.log('first Run', this.build(params, options));
-  //   console.log('second Run', this.build(params, options));
-  //   for (let i = 0; i < number; i++) {
-  //     console.log('params', params, options);
-  //     list.push(this.build(params, options));
-  //   }
-
-  //   return list;
-  // }
-
   /**
    * Asynchronously create an object using your factory.
    * @param params

@@ -34,26 +34,6 @@ const postFactory = Factory.define<Post>(({ sequence }) => {
   };
 });
 
-// const authorFactory = Factory.define<Author>(({ sequence }) => {
-//   withPosts() {
-//     return this.params({
-//       posts: postFactory.buildList(5),
-//     });
-//   }
-// });
-
-// class AuthorFactory extends Factory<Author> {
-//   // transientParams = { id: 1 };
-//   withPosts() {
-//     // console.log('THIS', this.params);
-
-//     return this.params({
-//       id: this.sequence(),
-//       posts: postFactory.buildList(5),
-//     });
-//   }
-// }
-
 const authorFactory = Factory.define<Author>(({ sequence }) => ({
   id: sequence,
   posts: postFactory.buildList(5),
@@ -81,16 +61,9 @@ describe('factory.buildList', () => {
     expect(users.map(u => u.name)).toEqual(['susan', 'susan']);
   });
 
-  // we want to have a trait of a user factory with a list of 5 posts.
-  // We then want to create a list of this trait with 2 users and 10 different posts.
-  it('build lists dynamically', () => {
-    // const authorFactory = AuthorFactory.define(() => ({ id: 10 }));
-    // const authorWithPosts = authorFactory.withPosts();
-    // const author = authorFactory.build();
+  it('build lists with different posts for each author', () => {
     const authorList = authorFactory.buildList(2);
-    // const authorList = authorFactory.buildDynamicList(2, { id: 20 });
-    // console.log(JSON.stringify(author, null, 2));
-    // console.log(JSON.stringify(authorList, null, 2));
+    console.log(JSON.stringify(authorList, null, 2));
     expect(authorList[0].id).not.toEqual(authorList[1].id);
 
     const firstAuthor = authorList[0];
@@ -100,6 +73,22 @@ describe('factory.buildList', () => {
 
     // expect to have different posts for each author
     expect(firstAuthorPosts?.[0].id).not.toEqual(secondAuthorPosts?.[0].id);
+  });
+
+  it('build lists with same posts for each author', () => {
+    const authorList = authorFactory.buildList(2, {
+      posts: postFactory.buildList(5),
+    });
+    console.log(JSON.stringify(authorList, null, 2));
+    expect(authorList[0].id).not.toEqual(authorList[1].id);
+
+    const firstAuthor = authorList[0];
+    const firstAuthorPosts = firstAuthor?.posts;
+    const secondAuthor = authorList[1];
+    const secondAuthorPosts = secondAuthor?.posts;
+
+    // expect to have same posts for each author
+    expect(firstAuthorPosts?.[0].id).toEqual(secondAuthorPosts?.[0].id);
   });
 
   it('calls afterBuild for each item', () => {
