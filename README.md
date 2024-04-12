@@ -324,6 +324,8 @@ user.name; // Sally
 user.admin; // true
 
 const user2 = sallyFactory.build({ admin: false });
+// log: hello
+// log: there
 user.name; // Sally
 user2.admin; // false
 ```
