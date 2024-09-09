@@ -433,7 +433,6 @@ software, and may be redistributed under the terms specified in the
 [LICENSE](/LICENSE) file.
 
 <!-- START /templates/footer.md -->
-
 ## About thoughtbot
 
 ![thoughtbot](https://thoughtbot.com/thoughtbot-logo-for-readmes.svg)
@@ -447,6 +446,7 @@ We are [available for hire][hire].
 
 [community]: https://thoughtbot.com/community?utm_source=github
 [hire]: https://thoughtbot.com/hire-us?utm_source=github
+
 
 <!-- END /templates/footer.md -->
 
