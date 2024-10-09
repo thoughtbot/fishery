@@ -393,7 +393,7 @@ Then build your object like this:
 
 ```typescript
 const jordan = userFactory.build({ name: 'Jordan' });
-factories.post.build({}, { associations: { author: jordan } });
+factories.post.build({}, { associations: { author: jordan } }); // { ... jordan } -> destructure the association if your code cannot have circular references
 ```
 
 If two factories reference each other, they can usually import each other
