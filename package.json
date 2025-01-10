@@ -72,5 +72,6 @@
   },
   "dependencies": {
     "lodash.mergewith": "^4.6.2"
-  }
+  },
+  "packageManager": "yarn@4.6.0"
 }

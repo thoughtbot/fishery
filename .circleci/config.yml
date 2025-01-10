@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: ~/fishery
     docker:
-      - image: circleci/node:12.22.6
+      - image: circleci/node:22.13.0
     steps:
       - checkout
       - restore_cache:
@@ -11,8 +11,11 @@ jobs:
           keys:
             - yarn-packages-{{ checksum "yarn.lock" }}
       - run:
+          name: Enable Corepack
+          command: corepack enable
+      - run:
           name: Install Dependencies
-          command: yarn install --frozen-lockfile
+          command: yarn install --immutable
       - save_cache:
           name: Save Yarn Package Cache
           key: yarn-packages-{{ checksum "yarn.lock" }}
