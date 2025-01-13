@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: ~/fishery
     docker:
-      - image: circleci/node:12.22.6
+      - image: cimg/node:22.13.0
     steps:
       - checkout
       - restore_cache:
