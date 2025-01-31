@@ -156,6 +156,31 @@ const userFactory = Factory.define<User>(({ params }) => {
 });
 ```
 
+#### Typechecking params that are classes
+
+By default Fishery uses a Typescript DeepPartial to make params and their properties optional. But this doesn't make sense when a param is a class instance. To override the DeepPartial params typechecking behavior, you can add a generic parameter to explain what the expected type of of the params is.
+
+```typescript
+type EventParams = DeepPartial<Event> & {
+  createdAt?: DateTime; // Overrides Event['createdAt'] that was DeepPartialObject<DateTime>
+};
+
+const eventFactory = Factory.define<Event, {}, User, EventParams>(
+  ({ params }) => {
+    const createdAt = DateTime.fromISO(new Date().toISOString());
+    const updatedAt = params.createdAt ?? createdAt;
+
+    return {
+      id: '1',
+      name: '1:1 Pairing Session',
+      createdAt,
+      updatedAt,
+    };
+  },
+);
+const event = eventFactory.build({ createdAt: new DateTime() });
+```
+
 ### Params that don't map to the result object (transient params)
 
 Factories can accept parameters that are not part of the resulting object. We
