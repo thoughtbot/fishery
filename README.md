@@ -165,7 +165,7 @@ type EventParams = DeepPartial<Event> & {
   createdAt?: DateTime; // Overrides Event['createdAt'] that was DeepPartialObject<DateTime>
 };
 
-const eventFactory = Factory.define<Event, {}, User, EventParams>(
+const eventFactory = Factory.define<Event, {}, Event, EventParams>(
   ({ params }) => {
     const createdAt = DateTime.fromISO(new Date().toISOString());
     const updatedAt = params.createdAt ?? createdAt;

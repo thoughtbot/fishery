@@ -22,7 +22,7 @@ type UserWithOptionalCreatedAt = DeepPartial<User> & {
   createdAt?: DateTime;
 };
 
-Factory.define<User, {}, User>(
+Factory.define<User>(
   // @ts-expect-error
   ({ params }) => {
     const createdAt = DateTime.fromISO(new Date().toISOString());
