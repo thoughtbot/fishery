@@ -8,11 +8,11 @@ import {
 } from './types';
 import { merge, mergeCustomizer } from './merge';
 
-export class FactoryBuilder<T, I, C> {
+export class FactoryBuilder<T, I, C, P> {
   constructor(
-    private generator: GeneratorFn<T, I, C>,
+    private generator: GeneratorFn<T, I, C, P>,
     private sequence: number,
-    private params: DeepPartial<T>,
+    private params: P,
     private transientParams: Partial<I>,
     private associations: Partial<T>,
     private afterBuilds: HookFn<T>[],
@@ -21,7 +21,7 @@ export class FactoryBuilder<T, I, C> {
   ) {}
 
   build() {
-    const generatorOptions: GeneratorFnOptions<T, I, C> = {
+    const generatorOptions: GeneratorFnOptions<T, I, C, P> = {
       sequence: this.sequence,
       afterBuild: this.setAfterBuild,
       afterCreate: this.setAfterCreate,
