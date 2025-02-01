@@ -67,4 +67,6 @@ npm version major
 
 Next, run `npm publish` to publish to NPM. Only thoughtbot employees with access to our NPM account can publish new versions.
 
-Finally, push up the tag that was created by the `npm version` command with `git push origin {tag name}` and push the commit to `main` and then create a release in GitHub with a description of what changed. Be sure to explicitly call out any breaking changes.
+Next, push up the tag that was created by the `npm version` command with `git push origin {tag name}` and push the commit to `main` and then create a release in GitHub with a description of what changed. Be sure to explicitly call out any breaking changes.
+
+Finally add a new GitHub release with the [Draft a new release button on the Releases page](https://github.com/thoughtbot/fishery/releases). Select the new tag that was just created. Reference a previous release's format when writing up the release description. Use GitHub's "Generate release notes" button to start. GitHub will automatically create asset zip files from the codebase. Set this as the latest release. You're done!
