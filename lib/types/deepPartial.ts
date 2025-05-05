@@ -22,6 +22,6 @@ export type DeepPartial<T> = T extends Primitive
 
 type Primitive = null | undefined | string | number | boolean | symbol | bigint;
 
-type DeepPartialObject<ObjectType extends object> = {
+export type DeepPartialObject<ObjectType extends object> = {
   [KeyType in keyof ObjectType]?: DeepPartial<ObjectType[KeyType]>;
 };
