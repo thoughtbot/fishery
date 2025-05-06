@@ -7,7 +7,7 @@ export const mergeCustomizer = (
   key: string,
   object: any,
 ) => {
-  if (Array.isArray(srcVal)) {
+  if (Array.isArray(srcVal) || ArrayBuffer.isView(srcVal)) {
     return srcVal;
   } else if (srcVal === undefined) {
     object[key] = srcVal;
