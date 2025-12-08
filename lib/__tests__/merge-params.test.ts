@@ -237,4 +237,76 @@ describe('merging params', () => {
       });
     });
   });
+
+  it('does not convert array-like objects to arrays when merging', () => {
+    type User = {
+      a: ArrayBuffer;
+      b: Buffer;
+      c: Uint8Array;
+      d: Float32Array;
+      e: Int8Array;
+      f: DataView;
+      g: string[];
+      nested: {
+        a: ArrayBuffer;
+        b: Buffer;
+        c: Uint8Array;
+        d: Float32Array;
+        e: Int8Array;
+        f: DataView;
+        g: string[];
+      };
+    };
+    const userFactory = Factory.define<User>(() => ({
+      a: new ArrayBuffer(5),
+      b: Buffer.from('hello'),
+      c: new Uint8Array(5),
+      d: new Float32Array(5),
+      e: new Int8Array(5),
+      f: new DataView(new ArrayBuffer(5)),
+      g: ['hello'],
+      nested: {
+        a: new ArrayBuffer(5),
+        b: Buffer.from('hello'),
+        c: new Uint8Array(5),
+        d: new Float32Array(5),
+        e: new Int8Array(5),
+        f: new DataView(new ArrayBuffer(5)),
+        g: ['hello'],
+      },
+    }));
+    const user = userFactory.build({
+      a: new ArrayBuffer(5),
+      b: Buffer.from('hello'),
+      c: new Uint8Array(5),
+      d: new Float32Array(5),
+      e: new Int8Array(5),
+      f: new DataView(new ArrayBuffer(5)),
+      g: ['hello'],
+      nested: {
+        a: new ArrayBuffer(5),
+        b: Buffer.from('hello'),
+        c: new Uint8Array(5),
+        d: new Float32Array(5),
+        e: new Int8Array(5),
+        f: new DataView(new ArrayBuffer(5)),
+        g: ['hello'],
+      },
+    });
+    expect(user.a).toBeInstanceOf(ArrayBuffer);
+    expect(user.b).toBeInstanceOf(Buffer);
+    expect(user.c).toBeInstanceOf(Uint8Array);
+    expect(user.d).toBeInstanceOf(Float32Array);
+    expect(user.e).toBeInstanceOf(Int8Array);
+    expect(user.f).toBeInstanceOf(DataView);
+    expect(Array.isArray(user.g)).toBe(true);
+
+    expect(user.nested.a).toBeInstanceOf(ArrayBuffer);
+    expect(user.nested.b).toBeInstanceOf(Buffer);
+    expect(user.nested.c).toBeInstanceOf(Uint8Array);
+    expect(user.nested.d).toBeInstanceOf(Float32Array);
+    expect(user.nested.e).toBeInstanceOf(Int8Array);
+    expect(user.nested.f).toBeInstanceOf(DataView);
+    expect(Array.isArray(user.nested.g)).toBe(true);
+  });
 });
