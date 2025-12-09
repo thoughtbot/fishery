@@ -35,7 +35,6 @@ objects. Here's how it's done:
 ### Define and use factories
 
 ```typescript
-// factories/user.ts
 import { Factory } from 'fishery';
 import { User } from '../my-types';
 import postFactory from './post';
@@ -188,7 +187,7 @@ call these transient params. When building an object, pass any transient
 params in the second argument:
 
 ```typescript
-const user = factories.user.build({}, { transient: { registered: true } });
+const user = userFactory.build({}, { transient: { registered: true } });
 ```
 
 Transient params are passed in to your factory and can then be used
@@ -255,7 +254,7 @@ up relationships:
 ```typescript
 const userFactory = Factory.define<User>(({ sequence, afterBuild }) => {
   afterBuild(user => {
-    const post = factories.post.build({}, { associations: { author: user } });
+    const post = postFactory.build({}, { associations: { author: user } });
     user.posts.push(post);
   });
 
@@ -420,7 +419,7 @@ Then build your object like this:
 
 ```typescript
 const jordan = userFactory.build({ name: 'Jordan' });
-factories.post.build({}, { associations: { author: jordan } });
+postFactory.build({}, { associations: { author: jordan } });
 ```
 
 If two factories reference each other, they can usually import each other
